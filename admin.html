@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel Administrativo</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+  color: #667eea;
+  font-size: 36px;
+  margin: 10px 0;
+}
+
+.tabla {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: #667eea;
+  color: white;
+}
+
+button {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #cc0000;
+}
+
+.menu {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.menu button {
+  background: white;
+  color: #667eea;
+  padding: 10px 20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Panel Administrativo</h1>
+    <p>Gestión completa de la clínica</p>
+  </div>
+  
+  <div class="menu">
+    <button onclick="cargarEstadisticas()">Estadísticas</button>
+    <button onclick="cargarCitas()">Ver Citas</button>
+    <button onclick="cargarUsuarios()">Ver Usuarios</button>
+  </div>
+  
+  <div id="stats" class="stats-grid"></div>
+  
+  <div id="contenido" class="tabla"></div>
+</div>
+
+<script>
+function cargarEstadisticas() {
+  fetch("http://localhost:3000/estadisticas")
+  .then(res => res.json())
+  .then(data => {
+    const statsDiv = document.getElementById("stats");
+    statsDiv.innerHTML = `
+      <div class="stat-card">
+        <h2>Total Citas</h2>
+        <h3>${data.totalCitas}</h3>
+      </div>
+      <div class="stat-card">
+        <h2>Total Usuarios</h2>
+        <h3>${data.totalUsuarios}</h3>
+      </div>
+    `;
+    
+    let doctoresHtml = '<div class="stat-card"><h2>Citas por Doctor</h2>';
+    data.citasPorDoctor.forEach(d => {
+      doctoresHtml += `<p><strong>${d._id}:</strong> ${d.count} citas</p>`;
+    });
+    doctoresHtml += '</div>';
+    statsDiv.innerHTML += doctoresHtml;
+  });
+}
+
+function cargarCitas() {
+  fetch("http://localhost:3000/citas")
+  .then(res => res.json())
+  .then(data => {
+    const contenido = document.getElementById("contenido");
+    contenido.innerHTML = `
+      <h3>Lista de Citas</h3>
+      <table>
+        <thead>
+          <tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Centro</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          ${data.map(c => `
+            <tr>
+              <td>${c.paciente}</td>
+              <td>${c.fecha}</td>
+              <td>${c.hora}</td>
+              <td>${c.doctor}</td>
+              <td>${c.centroMedico}</td>
+              <td><button onclick="eliminarCita('${c._id}')">Eliminar</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  });
+}
+
+function cargarUsuarios() {
+  fetch("http://localhost:3000/usuarios")
+  .then(res => res.json())
+  .then(data => {
+    const contenido = document.getElementById("contenido");
+    contenido.innerHTML = `
+      <h3>Lista de Usuarios</h3>
+      <table>
+        <thead>
+          <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Tipo Sangre</th></tr>
+        </thead>
+        <tbody>
+          ${data.map(u => `
+            <tr>
+              <td>${u.nombre}</td>
+              <td>${u.correo}</td>
+              <td>${u.telefono}</td>
+              <td>${u.tipoSangre || 'N/A'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  });
+}
+
+function eliminarCita(id) {
+  if (confirm("¿Eliminar esta cita?")) {
+    fetch(`http://localhost:3000/citas/${id}`, { method: "DELETE" })
+    .then(() => cargarCitas());
+  }
+}
+
+cargarEstadisticas();
+</script>
+</body>
+</html>

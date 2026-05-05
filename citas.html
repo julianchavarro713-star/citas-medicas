@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Agendar Cita Médica</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.header h1 {
+  margin-bottom: 10px;
+}
+
+.header p {
+  opacity: 0.9;
+}
+
+.formulario {
+  padding: 30px;
+}
+
+.campo {
+  margin-bottom: 20px;
+}
+
+.campo label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+}
+
+.campo input, .campo select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.campo input:focus, .campo select:focus {
+  outline: none;
+  border-color: #4facfe;
+}
+
+.campo input[readonly] {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+  margin-bottom: 10px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+.btn-cerrar {
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+}
+
+.btn-ver {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.lista {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 15px;
+}
+
+.lista h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.cita-card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-left: 4px solid #4facfe;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cita-info {
+  flex: 1;
+}
+
+.cita-info strong {
+  font-size: 16px;
+  color: #333;
+}
+
+.cita-info p {
+  margin-top: 5px;
+  font-size: 13px;
+  color: #666;
+}
+
+.btn-eliminar {
+  background: #ff4444;
+  padding: 8px 15px;
+  font-size: 12px;
+  width: auto;
+  margin-bottom: 0;
+}
+
+.mensaje-vacio {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+}
+
+.info-usuario {
+  background: linear-gradient(135deg, #e8f4f8, #d1ecf1);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.info-usuario span {
+  font-weight: bold;
+  color: #4facfe;
+}
+
+.sedes, .doctores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.opcion-sede, .opcion-doctor {
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.opcion-sede:hover, .opcion-doctor:hover {
+  border-color: #4facfe;
+  background: #f0f9ff;
+}
+
+.opcion-sede.seleccionada, .opcion-doctor.seleccionado {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  border-color: #4facfe;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🏥 Agendar Cita Médica</h1>
+    <p>Complete los datos para programar su cita</p>
+  </div>
+  
+  <div class="formulario">
+    <div id="infoUsuario" class="info-usuario"></div>
+
+    <div class="grid-2">
+      <div class="campo">
+        <label>👤 Nombre del Paciente</label>
+        <input type="text" id="paciente" readonly placeholder="Nombre del paciente">
+      </div>
+      
+      <div class="campo">
+        <label>📅 Fecha de la Cita</label>
+        <input type="date" id="fecha">
+      </div>
+      
+      <div class="campo">
+        <label>⏰ Hora de la Cita</label>
+        <input type="time" id="hora">
+      </div>
+      
+      <div class="campo">
+        <label>🏥 Seleccione Sede / Centro Médico</label>
+        <div class="sedes">
+          <div class="opcion-sede" data-sede="Urgencias Toberin">🏥 Urgencias Toberin</div>
+          <div class="opcion-sede" data-sede="La Cardio">❤️ La Cardio</div>
+          <div class="opcion-sede" data-sede="Colina">🌳 Colina</div>
+        </div>
+        <input type="hidden" id="centroMedico">
+      </div>
+      
+      <div class="campo">
+        <label>👨‍⚕️ Seleccione Doctor</label>
+        <div class="doctores">
+          <div class="opcion-doctor" data-doctor="Julian Chavarro">👨‍⚕️ Julian Chavarro - Cardiólogo</div>
+          <div class="opcion-doctor" data-doctor="Camilo Carrillo">👨‍⚕️ Camilo Carrillo - Médico General</div>
+          <div class="opcion-doctor" data-doctor="Andrea Cardenas">👩‍⚕️ Andrea Cardenas - Pediatra</div>
+          <div class="opcion-doctor" data-doctor="Carlos Lopez">👨‍⚕️ Carlos López - Dermatólogo</div>
+          <div class="opcion-doctor" data-doctor="Maria Rodriguez">👩‍⚕️ María Rodríguez - Ginecóloga</div>
+        </div>
+        <input type="hidden" id="doctor">
+      </div>
+    </div>
+    
+    <button onclick="crearCita()">📅 Agendar Cita</button>
+    <button onclick="verCitas()" class="btn-ver">📋 Ver Mis Citas</button>
+    <button onclick="cerrarSesion()" class="btn-cerrar">🚪 Cerrar Sesión</button>
+    
+    <div id="lista" class="lista">
+      <h3>📌 Mis Próximas Citas</h3>
+      <div id="citasLista"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Verificar usuario logueado
+const usuario = localStorage.getItem("usuario");
+if (!usuario) {
+  alert("Por favor inicie sesión primero");
+  window.location.href = "login.html";
+}
+
+const userData = JSON.parse(usuario);
+document.getElementById("paciente").value = userData.nombre;
+document.getElementById("infoUsuario").innerHTML = `
+  <span>👋 Bienvenido, ${userData.nombre}</span> | 📧 ${userData.correo}
+`;
+
+// Selección de sede
+document.querySelectorAll('.opcion-sede').forEach(el => {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.opcion-sede').forEach(s => s.classList.remove('seleccionada'));
+    this.classList.add('seleccionada');
+    document.getElementById('centroMedico').value = this.dataset.sede;
+  });
+});
+
+// Selección de doctor
+document.querySelectorAll('.opcion-doctor').forEach(el => {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
+    this.classList.add('seleccionado');
+    document.getElementById('doctor').value = this.dataset.doctor;
+  });
+});
+
+function cerrarSesion() {
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
+
+function crearCita() {
+  const centroMedico = document.getElementById("centroMedico").value;
+  const doctor = document.getElementById("doctor").value;
+  const fecha = document.getElementById("fecha").value;
+  const hora = document.getElementById("hora").value;
+  const paciente = document.getElementById("paciente").value;
+
+  if (!centroMedico) {
+    alert("⚠️ Por favor seleccione una sede");
+    return;
+  }
+  if (!doctor) {
+    alert("⚠️ Por favor seleccione un doctor");
+    return;
+  }
+  if (!fecha) {
+    alert("⚠️ Por favor seleccione una fecha");
+    return;
+  }
+  if (!hora) {
+    alert("⚠️ Por favor seleccione una hora");
+    return;
+  }
+
+  const datos = {
+    paciente: paciente,
+    fecha: fecha,
+    hora: hora,
+    doctor: doctor,
+    centroMedico: centroMedico
+  };
+
+  fetch("http://localhost:3000/citas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos)
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("✅ Cita agendada exitosamente");
+    verCitas();
+    limpiarSeleccion();
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    alert("❌ Error al agendar la cita");
+  });
+}
+
+function verCitas() {
+  fetch("http://localhost:3000/citas")
+  .then(res => res.json())
+  .then(data => {
+    const citasDiv = document.getElementById("citasLista");
+    const usuarioActual = JSON.parse(localStorage.getItem("usuario"));
+    
+    // Filtrar solo las citas del paciente logueado
+    const misCitas = data.filter(c => c.paciente === usuarioActual.nombre);
+    
+    if (misCitas.length === 0) {
+      citasDiv.innerHTML = '<div class="mensaje-vacio">📭 No tienes citas agendadas</div>';
+      return;
+    }
+    
+    citasDiv.innerHTML = "";
+    misCitas.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "cita-card";
+      div.innerHTML = `
+        <div class="cita-info">
+          <strong>📅 ${c.fecha} - ⏰ ${c.hora}</strong>
+          <p>👨‍⚕️ Doctor: ${c.doctor} | 🏥 Sede: ${c.centroMedico}</p>
+        </div>
+        <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
+      `;
+      citasDiv.appendChild(div);
+    });
+  });
+}
+
+function eliminarCita(id) {
+  if (confirm("¿Estás seguro de cancelar esta cita?")) {
+    fetch(`http://localhost:3000/citas/${id}`, { method: "DELETE" })
+    .then(() => {
+      alert("Cita cancelada");
+      verCitas();
+    });
+  }
+}
+
+function limpiarSeleccion() {
+  document.querySelectorAll('.opcion-sede').forEach(s => s.classList.remove('seleccionada'));
+  document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
+  document.getElementById('centroMedico').value = "";
+  document.getElementById('doctor').value = "";
+  document.getElementById('fecha').value = "";
+  document.getElementById('hora').value = "";
+}
+
+// Cargar citas al entrar
+verCitas();
+</script>
+</body>
+</html>
