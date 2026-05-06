@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
 
 const Cita = require("./models/Cita");
 const Usuario = require("./models/Usuario");
@@ -19,13 +19,7 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log("Conectado a MongoDB"))
   .catch(err => console.log("Error conectando a MongoDB:", err));
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "sistema.notificaa@gmail.com",
-    pass: "uqfycbyskrhzba"
-  }
-});
+const resend = new Resend("re_Q8RDB862_8UvrMFBPBcGPz7wFAJJt6jk4");
 
 app.post("/usuarios", async (req, res) => {
   try {
@@ -50,30 +44,27 @@ app.post("/usuarios", async (req, res) => {
     await nuevoUsuario.save();
     console.log("4. Usuario guardado correctamente");
 
-    const mailOptions = {
-      from: "sistema.notificaa@gmail.com",
-      to: req.body.correo,
-      subject: "🎉 Bienvenido al Sistema de Citas Médicas",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h1 style="color: #4facfe;">¡Hola ${req.body.nombre}!</h1>
-          <p>Tu cuenta ha sido <strong>creada exitosamente</strong> en el Sistema de Gestión de Citas Médicas.</p>
-          <p>Ya puedes agendar tus citas médicas desde nuestra plataforma.</p>
-          <p>🔗 Accede aquí: <a href="https://grand-fenglisu-4c6a7c.netlify.app/login.html">https://grand-fenglisu-4c6a7c.netlify.app</a></p>
-          <hr style="margin: 20px 0;">
-          <p style="color: #666; font-size: 12px;">Si no solicitaste este registro, ignora este mensaje.</p>
-          <p style="color: #666; font-size: 12px;">Saludos,<br>Equipo de la Clínica</p>
-        </div>
-      `
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log("❌ Error al enviar correo de bienvenida:", error);
-      } else {
-        console.log("✅ Correo de bienvenida enviado:", info.response);
-      }
-    });
+    try {
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: req.body.correo,
+        subject: "🎉 Bienvenido al Sistema de Citas Médicas",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h1 style="color: #4facfe;">¡Hola ${req.body.nombre}!</h1>
+            <p>Tu cuenta ha sido <strong>creada exitosamente</strong> en el Sistema de Gestión de Citas Médicas.</p>
+            <p>Ya puedes agendar tus citas médicas desde nuestra plataforma.</p>
+            <p>🔗 Accede aquí: <a href="https://grand-fenglisu-4c6a7c.netlify.app/login.html">https://grand-fenglisu-4c6a7c.netlify.app</a></p>
+            <hr style="margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">Si no solicitaste este registro, ignora este mensaje.</p>
+            <p style="color: #666; font-size: 12px;">Saludos,<br>Equipo de la Clínica</p>
+          </div>
+        `
+      });
+      console.log("✅ Correo de bienvenida enviado");
+    } catch (emailError) {
+      console.log("❌ Error al enviar correo de bienvenida:", emailError.message);
+    }
 
     res.status(201).json({ mensaje: "Usuario registrado exitosamente" });
   } catch (error) {
@@ -119,41 +110,38 @@ app.post("/citas", async (req, res) => {
     const paciente = await Usuario.findOne({ nombre: req.body.paciente });
     
     if (paciente && paciente.correo) {
-      const mailOptions = {
-        from: "sistema.notificaa@gmail.com",
-        to: paciente.correo,
-        subject: "✅ Confirmación de Cita Médica",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-            <h1 style="color: #4facfe;">¡Cita Agendada con Éxito!</h1>
-            <p>Hola <strong>${req.body.paciente}</strong>, tu cita ha sido agendada correctamente.</p>
-            
-            <h2>📋 Detalles de la Cita:</h2>
-            <ul style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
-              <li><strong>📅 Fecha:</strong> ${req.body.fecha}</li>
-              <li><strong>⏰ Hora:</strong> ${req.body.hora}</li>
-              <li><strong>👨‍⚕️ Doctor:</strong> ${req.body.doctor}</li>
-              <li><strong>🏥 Centro Médico:</strong> ${req.body.centroMedico}</li>
-            </ul>
-            
-            <p>Por favor, llega con 15 minutos de anticipación.</p>
-            
-            <p>🔗 Accede a tu cuenta: <a href="https://grand-fenglisu-4c6a7c.netlify.app/citas.html">https://grand-fenglisu-4c6a7c.netlify.app</a></p>
-            
-            <hr style="margin: 20px 0;">
-            <p style="color: #666; font-size: 12px;">Si no agendaste esta cita, por favor contacta al centro médico.</p>
-            <p style="color: #666; font-size: 12px;">Saludos,<br>Equipo de la Clínica</p>
-          </div>
-        `
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.log("❌ Error al enviar correo de cita:", error);
-        } else {
-          console.log("✅ Correo de cita enviado:", info.response);
-        }
-      });
+      try {
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: paciente.correo,
+          subject: "✅ Confirmación de Cita Médica",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+              <h1 style="color: #4facfe;">¡Cita Agendada con Éxito!</h1>
+              <p>Hola <strong>${req.body.paciente}</strong>, tu cita ha sido agendada correctamente.</p>
+              
+              <h2>📋 Detalles de la Cita:</h2>
+              <ul style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                <li><strong>📅 Fecha:</strong> ${req.body.fecha}</li>
+                <li><strong>⏰ Hora:</strong> ${req.body.hora}</li>
+                <li><strong>👨‍⚕️ Doctor:</strong> ${req.body.doctor}</li>
+                <li><strong>🏥 Centro Médico:</strong> ${req.body.centroMedico}</li>
+              </ul>
+              
+              <p>Por favor, llega con 15 minutos de anticipación.</p>
+              
+              <p>🔗 Accede a tu cuenta: <a href="https://grand-fenglisu-4c6a7c.netlify.app/citas.html">https://grand-fenglisu-4c6a7c.netlify.app</a></p>
+              
+              <hr style="margin: 20px 0;">
+              <p style="color: #666; font-size: 12px;">Si no agendaste esta cita, por favor contacta al centro médico.</p>
+              <p style="color: #666; font-size: 12px;">Saludos,<br>Equipo de la Clínica</p>
+            </div>
+          `
+        });
+        console.log("✅ Correo de cita enviado");
+      } catch (emailError) {
+        console.log("❌ Error al enviar correo de cita:", emailError.message);
+      }
     } else {
       console.log("⚠️ No se encontró el correo del paciente:", req.body.paciente);
     }
