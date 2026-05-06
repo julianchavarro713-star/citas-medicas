@@ -68,8 +68,12 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/usuarios", async (req, res) => {
-  const usuarios = await Usuario.find();
-  res.json(usuarios);
+  try {
+    const usuarios = await Usuario.find();
+    res.json(usuarios);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post("/citas", async (req, res) => {
@@ -83,13 +87,41 @@ app.post("/citas", async (req, res) => {
 });
 
 app.get("/citas", async (req, res) => {
-  const citas = await Cita.find();
-  res.json(citas);
+  try {
+    const citas = await Cita.find();
+    res.json(citas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.delete("/citas/:id", async (req, res) => {
-  await Cita.findByIdAndDelete(req.params.id);
-  res.json({ mensaje: "Eliminada" });
+  try {
+    await Cita.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: "Eliminada" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== ENDPOINT DE ESTADÍSTICAS ====================
+app.get("/estadisticas", async (req, res) => {
+  try {
+    const totalCitas = await Cita.countDocuments();
+    const totalUsuarios = await Usuario.countDocuments();
+    const citasPorDoctor = await Cita.aggregate([
+      { $group: { _id: "$doctor", count: { $sum: 1 } } }
+    ]);
+    
+    res.json({
+      totalCitas,
+      totalUsuarios,
+      citasPorDoctor
+    });
+  } catch (error) {
+    console.error("Error en estadísticas:", error);
+    res.status(500).json({ error: "Error al obtener estadísticas" });
+  }
 });
 
 app.listen(3000, () => {
