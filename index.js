@@ -11,9 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect("mongodb://127.0.0.1:27017/clinica")
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/clinica";
+mongoose.connect(MONGODB_URI)
   .then(() => console.log("Conectado a MongoDB"))
-  .catch(err => console.log("Error:", err));
+  .catch(err => console.log("Error conectando a MongoDB:", err));
 
 app.post("/usuarios", async (req, res) => {
   try {
