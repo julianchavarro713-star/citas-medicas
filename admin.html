@@ -54,13 +54,18 @@ body {
 
 table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
 th, td {
-  padding: 12px;
+  padding: 8px;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 200px;
 }
 
 th {
@@ -85,12 +90,22 @@ button:hover {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .menu button {
   background: white;
   color: #667eea;
   padding: 10px 20px;
+}
+
+@media (max-width: 768px) {
+  .tabla {
+    overflow-x: auto;
+  }
+  table {
+    min-width: 600px;
+  }
 }
 </style>
 </head>
@@ -166,18 +181,12 @@ function cargarCitas() {
         <tbody>
           ${data.map(c => `
             <tr>
-              <td>${c.paciente || 'N/A'}${c.paciente ? '' : 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}
-
-              <td>${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}
-
-              <td>${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}
-
-              <td>${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}
-
-              <td>${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}
-
-              <td><button onclick="eliminarCita('${c._id}')">🗑️ Eliminar</button>${c.centroMedico ? '' : 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}
-
+              <td>${c.paciente || 'N/A'}${c.paciente ? '' : 'N/A'}
+              <td>${c.fecha || 'N/A'}
+              <td>${c.hora || 'N/A'}
+              <td>${c.doctor || 'N/A'}
+              <td>${c.centroMedico || 'N/A'}
+              <td><button onclick="eliminarCita('${c._id}')">🗑️ Eliminar</button>
             </tr>
           `).join('')}
         </tbody>
@@ -208,14 +217,10 @@ function cargarUsuarios() {
         <tbody>
           ${data.map(u => `
             <tr>
-              <td>${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}
-
-              <td>${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}
-
-              <td>${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}
-
-              <td>${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}
-
+              <td>${u.nombre || 'N/A'}
+              <td>${u.correo || 'N/A'}
+              <td>${u.telefono || 'N/A'}
+              <td>${u.tipoSangre || 'N/A'}
             </tr>
           `).join('')}
         </tbody>
@@ -242,8 +247,6 @@ function eliminarCita(id) {
     });
   }
 }
-
-cargarEstadisticas();
 </script>
 </body>
 </html>
