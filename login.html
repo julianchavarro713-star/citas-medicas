@@ -148,6 +148,8 @@ button:hover {
 </div>
 
 <script>
+const API_URL = "https://citas-medicas-slg0.onrender.com";
+
 function togglePassword() {
   const passwordInput = document.getElementById("password");
   const button = event.target;
@@ -170,7 +172,7 @@ function iniciarSesion() {
     return;
   }
   
-  fetch("http://localhost:3000/login", {
+  fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ correo, password })

@@ -224,6 +224,8 @@ button:hover {
 </div>
 
 <script>
+const API_URL = "https://citas-medicas-slg0.onrender.com";
+
 function togglePassword() {
   const passwordInput = document.getElementById("password");
   const button = event.target;
@@ -256,7 +258,7 @@ async function registrarUsuario() {
   }
   
   try {
-    const response = await fetch("http://localhost:3000/usuarios", {
+    const response = await fetch(`${API_URL}/usuarios`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(usuario)
@@ -278,7 +280,7 @@ async function registrarUsuario() {
 }
 
 function cargarUsuarios() {
-  fetch("http://localhost:3000/usuarios")
+  fetch(`${API_URL}/usuarios`)
   .then(res => res.json())
   .then(data => {
     const lista = document.getElementById("listaUsuarios");

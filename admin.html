@@ -113,8 +113,10 @@ button:hover {
 </div>
 
 <script>
+const API_URL = "https://citas-medicas-slg0.onrender.com";
+
 function cargarEstadisticas() {
-  fetch("http://localhost:3000/estadisticas")
+  fetch(`${API_URL}/estadisticas`)
   .then(res => res.json())
   .then(data => {
     const statsDiv = document.getElementById("stats");
@@ -130,19 +132,31 @@ function cargarEstadisticas() {
     `;
     
     let doctoresHtml = '<div class="stat-card"><h2>Citas por Doctor</h2>';
-    data.citasPorDoctor.forEach(d => {
-      doctoresHtml += `<p><strong>${d._id}:</strong> ${d.count} citas</p>`;
-    });
+    if (data.citasPorDoctor && data.citasPorDoctor.length > 0) {
+      data.citasPorDoctor.forEach(d => {
+        doctoresHtml += `<p><strong>${d._id}:</strong> ${d.count} citas</p>`;
+      });
+    } else {
+      doctoresHtml += `<p>No hay citas registradas</p>`;
+    }
     doctoresHtml += '</div>';
     statsDiv.innerHTML += doctoresHtml;
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    document.getElementById("stats").innerHTML = '<div class="stat-card"><h3>Error al cargar estadísticas</h3></div>';
   });
 }
 
 function cargarCitas() {
-  fetch("http://localhost:3000/citas")
+  fetch(`${API_URL}/citas`)
   .then(res => res.json())
   .then(data => {
     const contenido = document.getElementById("contenido");
+    if (!data || data.length === 0) {
+      contenido.innerHTML = `<h3>Lista de Citas</h3><p>No hay citas registradas</p>`;
+      return;
+    }
     contenido.innerHTML = `
       <h3>Lista de Citas</h3>
       <table>
@@ -152,25 +166,39 @@ function cargarCitas() {
         <tbody>
           ${data.map(c => `
             <tr>
-              <td>${c.paciente}</td>
-              <td>${c.fecha}</td>
-              <td>${c.hora}</td>
-              <td>${c.doctor}</td>
-              <td>${c.centroMedico}</td>
-              <td><button onclick="eliminarCita('${c._id}')">Eliminar</button></td>
+              <td>${c.paciente || 'N/A'}${c.paciente ? '' : 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}${c.paciente || 'N/A'}
+
+              <td>${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}${c.fecha || 'N/A'}
+
+              <td>${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}${c.hora || 'N/A'}
+
+              <td>${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}${c.doctor || 'N/A'}
+
+              <td>${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}
+
+              <td><button onclick="eliminarCita('${c._id}')">🗑️ Eliminar</button>${c.centroMedico ? '' : 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}${c.centroMedico || 'N/A'}
+
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    document.getElementById("contenido").innerHTML = '<h3>Error al cargar citas</h3>';
   });
 }
 
 function cargarUsuarios() {
-  fetch("http://localhost:3000/usuarios")
+  fetch(`${API_URL}/usuarios`)
   .then(res => res.json())
   .then(data => {
     const contenido = document.getElementById("contenido");
+    if (!data || data.length === 0) {
+      contenido.innerHTML = `<h3>Lista de Usuarios</h3><p>No hay usuarios registrados</p>`;
+      return;
+    }
     contenido.innerHTML = `
       <h3>Lista de Usuarios</h3>
       <table>
@@ -180,22 +208,38 @@ function cargarUsuarios() {
         <tbody>
           ${data.map(u => `
             <tr>
-              <td>${u.nombre}</td>
-              <td>${u.correo}</td>
-              <td>${u.telefono}</td>
-              <td>${u.tipoSangre || 'N/A'}</td>
+              <td>${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}${u.nombre || 'N/A'}
+
+              <td>${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}${u.correo || 'N/A'}
+
+              <td>${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}${u.telefono || 'N/A'}
+
+              <td>${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}${u.tipoSangre || 'N/A'}
+
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    document.getElementById("contenido").innerHTML = '<h3>Error al cargar usuarios</h3>';
   });
 }
 
 function eliminarCita(id) {
   if (confirm("¿Eliminar esta cita?")) {
-    fetch(`http://localhost:3000/citas/${id}`, { method: "DELETE" })
-    .then(() => cargarCitas());
+    fetch(`${API_URL}/citas/${id}`, { method: "DELETE" })
+    .then(() => {
+      alert("Cita eliminada");
+      cargarCitas();
+      cargarEstadisticas();
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Error al eliminar la cita");
+    });
   }
 }
 

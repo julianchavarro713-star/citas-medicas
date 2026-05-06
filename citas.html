@@ -264,6 +264,8 @@ button:hover {
 </div>
 
 <script>
+const API_URL = "https://citas-medicas-slg0.onrender.com";
+
 // Verificar usuario logueado
 const usuario = localStorage.getItem("usuario");
 if (!usuario) {
@@ -332,7 +334,7 @@ function crearCita() {
     centroMedico: centroMedico
   };
 
-  fetch("http://localhost:3000/citas", {
+  fetch(`${API_URL}/citas`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos)
@@ -350,7 +352,7 @@ function crearCita() {
 }
 
 function verCitas() {
-  fetch("http://localhost:3000/citas")
+  fetch(`${API_URL}/citas`)
   .then(res => res.json())
   .then(data => {
     const citasDiv = document.getElementById("citasLista");
@@ -382,7 +384,7 @@ function verCitas() {
 
 function eliminarCita(id) {
   if (confirm("¿Estás seguro de cancelar esta cita?")) {
-    fetch(`http://localhost:3000/citas/${id}`, { method: "DELETE" })
+    fetch(`${API_URL}/citas/${id}`, { method: "DELETE" })
     .then(() => {
       alert("Cita cancelada");
       verCitas();
