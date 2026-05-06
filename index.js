@@ -8,7 +8,10 @@ const Usuario = require("./models/Usuario");
 
 const app = express();
 
-app.use(cors());
+// Configurar CORS correctamente
+app.use(cors({
+  origin: "https://grand-fenglisu-4c6a7c.netlify.app"
+}));
 app.use(express.json());
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/clinica";
