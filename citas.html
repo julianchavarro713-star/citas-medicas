@@ -339,15 +339,27 @@ function crearCita() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos)
   })
-  .then(res => res.json())
+  .then(async res => {
+    if (res.status === 409) {
+      const error = await res.json();
+      alert(error.error);
+      throw new Error("Horario no disponible");
+    }
+    if (!res.ok) {
+      throw new Error("Error al agendar");
+    }
+    return res.json();
+  })
   .then(data => {
-    alert("✅ Cita agendada exitosamente");
+    alert(data.mensaje);
     verCitas();
     limpiarSeleccion();
   })
   .catch(error => {
+    if (error.message !== "Horario no disponible") {
+      alert("❌ Error al agendar la cita. Intenta de nuevo.");
+    }
     console.error("Error:", error);
-    alert("❌ Error al agendar la cita");
   });
 }
 
