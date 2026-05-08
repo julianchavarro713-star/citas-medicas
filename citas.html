@@ -59,16 +59,23 @@ body {
   font-size: 14px;
 }
 
-.campo input, .campo select {
+.campo label .opcional {
+  font-weight: normal;
+  color: #999;
+  font-size: 12px;
+}
+
+.campo input, .campo select, .campo textarea {
   width: 100%;
   padding: 12px;
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   font-size: 14px;
   transition: border-color 0.3s;
+  font-family: inherit;
 }
 
-.campo input:focus, .campo select:focus {
+.campo input:focus, .campo select:focus, .campo textarea:focus {
   outline: none;
   border-color: #4facfe;
 }
@@ -76,6 +83,11 @@ body {
 .campo input[readonly] {
   background-color: #f5f5f5;
   cursor: not-allowed;
+}
+
+.campo textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .grid-2 {
@@ -148,6 +160,14 @@ button:hover {
   margin-top: 5px;
   font-size: 13px;
   color: #666;
+}
+
+.motivo-info {
+  background: #f8f9fa;
+  padding: 8px;
+  border-radius: 8px;
+  margin-top: 8px;
+  font-style: italic;
 }
 
 .btn-eliminar {
@@ -279,6 +299,9 @@ button:hover {
   .cita-acciones {
     margin-top: 10px;
   }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -327,6 +350,12 @@ button:hover {
         </div>
         <input type="hidden" id="doctor">
       </div>
+    </div>
+    
+    <!-- Campo Motivo de Consulta (Opcional) -->
+    <div class="campo">
+      <label>📋 Motivo de Consulta <span class="opcional">(Opcional)</span></label>
+      <textarea id="motivo" rows="3" placeholder="Ej: Dolor de cabeza, revisión anual, control médico, etc..."></textarea>
     </div>
     
     <button onclick="crearCita()">📅 Agendar Cita</button>
@@ -439,6 +468,7 @@ function crearCita() {
   const fecha = document.getElementById("fecha").value;
   const hora = document.getElementById("hora").value;
   const paciente = document.getElementById("paciente").value;
+  const motivo = document.getElementById("motivo").value;
 
   if (!centroMedico) {
     alert("⚠️ Por favor seleccione una sede");
@@ -462,7 +492,8 @@ function crearCita() {
     fecha: fecha,
     hora: hora,
     doctor: doctor,
-    centroMedico: centroMedico
+    centroMedico: centroMedico,
+    motivo: motivo || "No especificado"
   };
 
   fetch(`${API_URL}/citas`, {
@@ -513,10 +544,15 @@ function verCitas() {
     misCitas.forEach(c => {
       const div = document.createElement("div");
       div.className = "cita-card";
+      let motivoHtml = '';
+      if (c.motivo && c.motivo !== "No especificado") {
+        motivoHtml = `<div class="motivo-info">📋 Motivo: ${c.motivo}</div>`;
+      }
       div.innerHTML = `
         <div class="cita-info">
           <strong>📅 ${c.fecha} - ⏰ ${c.hora}</strong>
           <p>👨‍⚕️ Doctor: ${c.doctor} | 🏥 Sede: ${c.centroMedico}</p>
+          ${motivoHtml}
         </div>
         <div class="cita-acciones">
           <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
@@ -539,9 +575,6 @@ function eliminarCita(id) {
 }
 
 function descargarPDF(idCita) {
-  // Mostrar mensaje de carga
-  const loadingMsg = alert("⏳ Generando PDF, por favor espera...");
-  
   fetch(`${API_URL}/citas`)
     .then(res => res.json())
     .then(citas => {
@@ -552,7 +585,10 @@ function descargarPDF(idCita) {
         return;
       }
       
-      // Crear el HTML del PDF
+      // Formatear fecha
+      const fechaFormateada = cita.fecha.split('T')[0];
+      const motivoTexto = (cita.motivo && cita.motivo !== "No especificado") ? cita.motivo : "No especificado";
+      
       const contenido = `
         <!DOCTYPE html>
         <html>
@@ -561,43 +597,131 @@ function descargarPDF(idCita) {
           <title>Comprobante de Cita Médica</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #f0f0f0; }
-            .pdf-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
-            .pdf-header { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 30px; text-align: center; }
-            .pdf-header h1 { font-size: 28px; margin-bottom: 5px; }
-            .pdf-header p { font-size: 14px; opacity: 0.9; }
-            .pdf-body { padding: 30px; }
-            .campo { margin-bottom: 20px; padding: 10px; border-bottom: 2px solid #f0f0f0; }
-            .campo strong { color: #4facfe; display: inline-block; width: 120px; font-size: 14px; }
-            .campo span { color: #333; font-size: 14px; }
-            .pdf-footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; }
-            .mensaje-final { text-align: center; margin-top: 15px; color: #4facfe; font-size: 12px; }
+            body { 
+              font-family: 'Segoe UI', Arial, sans-serif; 
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              padding: 40px;
+              min-height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .pdf-container { 
+              max-width: 550px; 
+              margin: 0 auto; 
+              background: white; 
+              border-radius: 25px; 
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+              overflow: hidden;
+            }
+            .pdf-header { 
+              background: linear-gradient(135deg, #4facfe, #00f2fe); 
+              color: white; 
+              padding: 30px; 
+              text-align: center; 
+            }
+            .pdf-header h1 { 
+              font-size: 28px; 
+              margin-bottom: 5px; 
+              letter-spacing: 2px;
+            }
+            .pdf-header p { 
+              font-size: 14px; 
+              opacity: 0.9; 
+            }
+            .pdf-body { 
+              padding: 30px; 
+            }
+            .campo { 
+              margin-bottom: 18px; 
+              padding: 12px; 
+              background: #f8f9fa;
+              border-radius: 12px;
+              border-left: 4px solid #4facfe;
+            }
+            .campo strong { 
+              color: #4facfe; 
+              display: inline-block; 
+              width: 100px; 
+              font-size: 13px; 
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .campo span { 
+              color: #333; 
+              font-size: 14px; 
+              font-weight: 500;
+            }
+            .campo-motivo {
+              background: #e8f4f8;
+              border-left-color: #28a745;
+            }
+            .pdf-footer { 
+              background: #f8f9fa; 
+              padding: 20px; 
+              text-align: center; 
+              border-top: 1px solid #e0e0e0;
+            }
+            .pdf-footer p { 
+              color: #666; 
+              font-size: 11px; 
+              margin: 5px 0;
+            }
+            .qr-mensaje {
+              text-align: center;
+              margin-top: 15px;
+              font-size: 10px;
+              color: #4facfe;
+            }
           </style>
         </head>
         <body>
           <div class="pdf-container">
             <div class="pdf-header">
-              <h1>🏥 Clínica Médica</h1>
+              <h1>🏥 CLÍNICA MÉDICA</h1>
               <p>Comprobante de Cita</p>
             </div>
             <div class="pdf-body">
-              <div class="campo"><strong>👤 Paciente:</strong> <span>${cita.paciente || 'No especificado'}</span></div>
-              <div class="campo"><strong>📅 Fecha:</strong> <span>${cita.fecha || 'No especificada'}</span></div>
-              <div class="campo"><strong>⏰ Hora:</strong> <span>${cita.hora || 'No especificada'}</span></div>
-              <div class="campo"><strong>👨‍⚕️ Doctor:</strong> <span>${cita.doctor || 'No especificado'}</span></div>
-              <div class="campo"><strong>🏥 Sede:</strong> <span>${cita.centroMedico || 'No especificada'}</span></div>
-              <div class="campo"><strong>🆔 ID Cita:</strong> <span>${idCita.substring(0, 12)}...</span></div>
+              <div class="campo">
+                <strong>👤 PACIENTE:</strong> 
+                <span>${cita.paciente || 'No especificado'}</span>
+              </div>
+              <div class="campo">
+                <strong>📅 FECHA:</strong> 
+                <span>${fechaFormateada || 'No especificada'}</span>
+              </div>
+              <div class="campo">
+                <strong>⏰ HORA:</strong> 
+                <span>${cita.hora || 'No especificada'}</span>
+              </div>
+              <div class="campo">
+                <strong>👨‍⚕️ DOCTOR:</strong> 
+                <span>${cita.doctor || 'No especificado'}</span>
+              </div>
+              <div class="campo">
+                <strong>🏥 SEDE:</strong> 
+                <span>${cita.centroMedico || 'No especificada'}</span>
+              </div>
+              <div class="campo campo-motivo">
+                <strong>📋 MOTIVO:</strong> 
+                <span>${motivoTexto}</span>
+              </div>
+              <div class="campo">
+                <strong>🆔 ID CITA:</strong> 
+                <span>${idCita.substring(0, 12)}...</span>
+              </div>
             </div>
             <div class="pdf-footer">
-              <p>📌 Por favor llegar con 15 minutos de anticipación</p>
-              <p class="mensaje-final">✓ Generado el ${new Date().toLocaleString()}</p>
+              <p>📌 Por favor llegar con <strong>15 minutos de anticipación</strong></p>
+              <p>📅 Generado el ${new Date().toLocaleString()}</p>
+              <p class="qr-mensaje">✓ Comprobante válido para presentar en la cita</p>
             </div>
           </div>
         </body>
         </html>
       `;
       
-      // Crear un iframe oculto para generar el PDF
+      // Crear iframe para PDF
       const iframe = document.createElement('iframe');
       iframe.style.position = 'absolute';
       iframe.style.left = '-9999px';
@@ -610,22 +734,21 @@ function descargarPDF(idCita) {
       iframe.contentWindow.document.write(contenido);
       iframe.contentWindow.document.close();
       
-      // Esperar a que cargue el contenido
       setTimeout(() => {
         html2pdf().from(iframe.contentWindow.document.body).set({
           margin: [0.5, 0.5, 0.5, 0.5],
-          filename: `cita_${cita.fecha}_${cita.hora.replace(/:/g, '-')}.pdf`,
-          html2canvas: { scale: 2, logging: false, useCORS: true },
+          filename: `cita_${cita.paciente}_${fechaFormateada}.pdf`,
+          html2canvas: { scale: 2, logging: false },
           jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         }).save().then(() => {
           document.body.removeChild(iframe);
-          console.log("PDF generado correctamente");
+          console.log("PDF generado");
         }).catch(err => {
-          console.error("Error generando PDF:", err);
+          console.error("Error PDF:", err);
           alert("❌ Error al generar el PDF");
           document.body.removeChild(iframe);
         });
-      }, 1000);
+      }, 800);
     })
     .catch(error => {
       console.error("Error:", error);
@@ -639,6 +762,7 @@ function limpiarSeleccion() {
   document.getElementById('doctor').value = "";
   document.getElementById('fecha').value = "";
   document.getElementById('hora').value = "";
+  document.getElementById('motivo').value = "";
   
   // Resetear doctores
   const container = document.getElementById("doctoresContainer");
