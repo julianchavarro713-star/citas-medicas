@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Agendar Cita Médica</title>
+<!-- Librería para generar PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 * {
   margin: 0;
@@ -130,6 +132,7 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .cita-info {
@@ -153,6 +156,24 @@ button:hover {
   font-size: 12px;
   width: auto;
   margin-bottom: 0;
+}
+
+.btn-pdf {
+  background: #28a745;
+  padding: 8px 15px;
+  font-size: 12px;
+  width: auto;
+  margin-bottom: 0;
+  margin-left: 10px;
+}
+
+.btn-pdf:hover {
+  background: #218838;
+}
+
+.cita-acciones {
+  display: flex;
+  gap: 10px;
 }
 
 .mensaje-vacio {
@@ -200,6 +221,16 @@ button:hover {
   color: white;
   border-color: #4facfe;
 }
+
+@media (max-width: 600px) {
+  .cita-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .cita-acciones {
+    margin-top: 10px;
+  }
+}
 </style>
 </head>
 <body>
@@ -242,11 +273,12 @@ button:hover {
       <div class="campo">
         <label>👨‍⚕️ Seleccione Doctor</label>
         <div class="doctores">
-          <div class="opcion-doctor" data-doctor="Julian Chavarro">👨‍⚕️ Julian Chavarro - Cardiólogo</div>
-          <div class="opcion-doctor" data-doctor="Camilo Carrillo">👨‍⚕️ Camilo Carrillo - Médico General</div>
-          <div class="opcion-doctor" data-doctor="Andrea Cardenas">👩‍⚕️ Andrea Cardenas - Pediatra</div>
-          <div class="opcion-doctor" data-doctor="Carlos Lopez">👨‍⚕️ Carlos López - Dermatólogo</div>
-          <div class="opcion-doctor" data-doctor="Maria Rodriguez">👩‍⚕️ María Rodríguez - Ginecóloga</div>
+          <!-- Doctores con atributo data-sede para filtrar -->
+          <div class="opcion-doctor" data-doctor="Julian Chavarro" data-sede="todas">👨‍⚕️ Julian Chavarro - Cardiólogo</div>
+          <div class="opcion-doctor" data-doctor="Camilo Carrillo" data-sede="todas">👨‍⚕️ Camilo Carrillo - Médico General</div>
+          <div class="opcion-doctor" data-doctor="Andrea Cardenas" data-sede="Urgencias Toberin">👩‍⚕️ Andrea Cardenas - Pediatra</div>
+          <div class="opcion-doctor" data-doctor="Carlos Lopez" data-sede="La Cardio">👨‍⚕️ Carlos López - Dermatólogo</div>
+          <div class="opcion-doctor" data-doctor="Maria Rodriguez" data-sede="Colina">👩‍⚕️ María Rodríguez - Ginecóloga</div>
         </div>
         <input type="hidden" id="doctor">
       </div>
@@ -279,12 +311,31 @@ document.getElementById("infoUsuario").innerHTML = `
   <span>👋 Bienvenido, ${userData.nombre}</span> | 📧 ${userData.correo}
 `;
 
-// Selección de sede
+// Función para filtrar doctores según la sede seleccionada
+function filtrarDoctoresPorSede(sedeSeleccionada) {
+  const doctores = document.querySelectorAll('.opcion-doctor');
+  doctores.forEach(doctor => {
+    const sedeDoctor = doctor.getAttribute('data-sede');
+    if (sedeDoctor === 'todas' || sedeDoctor === sedeSeleccionada) {
+      doctor.style.display = 'block';
+    } else {
+      doctor.style.display = 'none';
+    }
+  });
+  
+  // Limpiar selección de doctor
+  document.getElementById('doctor').value = "";
+  document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
+}
+
+// Selección de sede (con filtro de doctores)
 document.querySelectorAll('.opcion-sede').forEach(el => {
   el.addEventListener('click', function() {
     document.querySelectorAll('.opcion-sede').forEach(s => s.classList.remove('seleccionada'));
     this.classList.add('seleccionada');
     document.getElementById('centroMedico').value = this.dataset.sede;
+    // Filtrar doctores según la sede elegida
+    filtrarDoctoresPorSede(this.dataset.sede);
   });
 });
 
@@ -387,7 +438,10 @@ function verCitas() {
           <strong>📅 ${c.fecha} - ⏰ ${c.hora}</strong>
           <p>👨‍⚕️ Doctor: ${c.doctor} | 🏥 Sede: ${c.centroMedico}</p>
         </div>
-        <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
+        <div class="cita-acciones">
+          <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
+          <button class="btn-pdf" onclick="descargarPDF('${c._id}')">📄 Descargar PDF</button>
+        </div>
       `;
       citasDiv.appendChild(div);
     });
@@ -402,6 +456,103 @@ function eliminarCita(id) {
       verCitas();
     });
   }
+}
+
+function descargarPDF(idCita) {
+  // Buscar la cita específica
+  fetch(`${API_URL}/citas`)
+    .then(res => res.json())
+    .then(citas => {
+      const cita = citas.find(c => c._id === idCita);
+      
+      if (!cita) {
+        alert("No se encontró la cita");
+        return;
+      }
+      
+      // Crear el contenido del PDF
+      const contenido = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Comprobante de Cita Médica</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 40px;
+            }
+            h1 {
+              color: #4facfe;
+              text-align: center;
+            }
+            .comprobante {
+              border: 1px solid #ddd;
+              padding: 20px;
+              border-radius: 10px;
+              max-width: 500px;
+              margin: 0 auto;
+            }
+            .campo {
+              margin: 15px 0;
+              padding: 8px;
+              border-bottom: 1px solid #eee;
+            }
+            .campo strong {
+              color: #333;
+            }
+            .fecha {
+              text-align: center;
+              margin-top: 30px;
+              color: #999;
+              font-size: 12px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="comprobante">
+            <h1>🏥 Clínica Médica</h1>
+            <h2 style="text-align:center;">Comprobante de Cita</h2>
+            
+            <div class="campo">
+              <strong>👤 Paciente:</strong> ${cita.paciente}
+            </div>
+            <div class="campo">
+              <strong>📅 Fecha:</strong> ${cita.fecha}
+            </div>
+            <div class="campo">
+              <strong>⏰ Hora:</strong> ${cita.hora}
+            </div>
+            <div class="campo">
+              <strong>👨‍⚕️ Doctor:</strong> ${cita.doctor}
+            </div>
+            <div class="campo">
+              <strong>🏥 Sede:</strong> ${cita.centroMedico}
+            </div>
+            
+            <div class="fecha">
+              Generado el ${new Date().toLocaleString()}
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // Crear un elemento temporal para generar el PDF
+      const element = document.createElement('div');
+      element.innerHTML = contenido;
+      document.body.appendChild(element);
+      
+      // Generar PDF
+      html2pdf().from(element).set({
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `cita_${cita.fecha}_${cita.hora}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).save().then(() => {
+        document.body.removeChild(element);
+      });
+    });
 }
 
 function limpiarSeleccion() {
