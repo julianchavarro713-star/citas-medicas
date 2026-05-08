@@ -195,14 +195,21 @@ button:hover {
   color: #4facfe;
 }
 
-.sedes, .doctores {
+.sedes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin-top: 5px;
 }
 
-.opcion-sede, .opcion-doctor {
+.doctores {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.opcion-sede {
   padding: 10px;
   border: 2px solid #e0e0e0;
   border-radius: 10px;
@@ -211,15 +218,57 @@ button:hover {
   transition: all 0.3s;
 }
 
-.opcion-sede:hover, .opcion-doctor:hover {
+.opcion-sede:hover {
   border-color: #4facfe;
   background: #f0f9ff;
 }
 
-.opcion-sede.seleccionada, .opcion-doctor.seleccionado {
+.opcion-sede.seleccionada {
   background: linear-gradient(135deg, #4facfe, #00f2fe);
   color: white;
   border-color: #4facfe;
+}
+
+.opcion-doctor {
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: white;
+}
+
+.opcion-doctor:hover {
+  border-color: #4facfe;
+  background: #f0f9ff;
+}
+
+.opcion-doctor.seleccionado {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  border-color: #4facfe;
+}
+
+.doctores-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 15px;
+  min-height: 200px;
+  background: #fafafa;
+}
+
+.doctores-container h4 {
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 14px;
+}
+
+.doctores-vacio {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-style: italic;
 }
 
 @media (max-width: 600px) {
@@ -272,13 +321,9 @@ button:hover {
       
       <div class="campo">
         <label>👨‍⚕️ Seleccione Doctor</label>
-        <div class="doctores">
-          <!-- Doctores con atributo data-sede para filtrar -->
-          <div class="opcion-doctor" data-doctor="Julian Chavarro" data-sede="todas">👨‍⚕️ Julian Chavarro - Cardiólogo</div>
-          <div class="opcion-doctor" data-doctor="Camilo Carrillo" data-sede="todas">👨‍⚕️ Camilo Carrillo - Médico General</div>
-          <div class="opcion-doctor" data-doctor="Andrea Cardenas" data-sede="Urgencias Toberin">👩‍⚕️ Andrea Cardenas - Pediatra</div>
-          <div class="opcion-doctor" data-doctor="Carlos Lopez" data-sede="La Cardio">👨‍⚕️ Carlos López - Dermatólogo</div>
-          <div class="opcion-doctor" data-doctor="Maria Rodriguez" data-sede="Colina">👩‍⚕️ María Rodríguez - Ginecóloga</div>
+        <div id="doctoresContainer" class="doctores-container">
+          <h4>Primero selecciona una sede</h4>
+          <div class="doctores-vacio">🏥 Elige una sede para ver los doctores disponibles</div>
         </div>
         <input type="hidden" id="doctor">
       </div>
@@ -298,6 +343,25 @@ button:hover {
 <script>
 const API_URL = "https://citas-medicas-slg0.onrender.com";
 
+// Definir doctores por sede
+const doctoresPorSede = {
+  "Urgencias Toberin": [
+    { nombre: "Julian Chavarro", especialidad: "Cardiólogo" },
+    { nombre: "Camilo Carrillo", especialidad: "Médico General" },
+    { nombre: "David Andres", especialidad: "Urgenciólogo" }
+  ],
+  "La Cardio": [
+    { nombre: "Maria Jose", especialidad: "Cardióloga" },
+    { nombre: "Camilo Suarez", especialidad: "Cardiólogo" },
+    { nombre: "Manuela Dueñas", especialidad: "Cardióloga" }
+  ],
+  "Colina": [
+    { nombre: "Dana Michell", especialidad: "Médico General" },
+    { nombre: "Andres Quintero", especialidad: "Pediatra" },
+    { nombre: "Santiago Ortiz", especialidad: "Ortopedista" }
+  ]
+};
+
 // Verificar usuario logueado
 const usuario = localStorage.getItem("usuario");
 if (!usuario) {
@@ -311,40 +375,56 @@ document.getElementById("infoUsuario").innerHTML = `
   <span>👋 Bienvenido, ${userData.nombre}</span> | 📧 ${userData.correo}
 `;
 
-// Función para filtrar doctores según la sede seleccionada
-function filtrarDoctoresPorSede(sedeSeleccionada) {
-  const doctores = document.querySelectorAll('.opcion-doctor');
+// Función para mostrar doctores según la sede seleccionada
+function mostrarDoctoresPorSede(sede) {
+  const container = document.getElementById("doctoresContainer");
+  const doctores = doctoresPorSede[sede];
+  
+  if (!doctores || doctores.length === 0) {
+    container.innerHTML = `
+      <h4>👨‍⚕️ Doctores disponibles</h4>
+      <div class="doctores-vacio">❌ No hay doctores disponibles para esta sede</div>
+    `;
+    return;
+  }
+  
+  let html = `<h4>👨‍⚕️ Doctores disponibles en ${sede}</h4>\n`;
+  html += `<div class="doctores">\n`;
+  
   doctores.forEach(doctor => {
-    const sedeDoctor = doctor.getAttribute('data-sede');
-    if (sedeDoctor === 'todas' || sedeDoctor === sedeSeleccionada) {
-      doctor.style.display = 'block';
-    } else {
-      doctor.style.display = 'none';
-    }
+    html += `
+      <div class="opcion-doctor" data-doctor="${doctor.nombre}" data-especialidad="${doctor.especialidad}">
+        👨‍⚕️ ${doctor.nombre} - ${doctor.especialidad}
+      </div>
+    `;
   });
   
-  // Limpiar selección de doctor
-  document.getElementById('doctor').value = "";
-  document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
+  html += `</div>\n`;
+  container.innerHTML = html;
+  
+  // Agregar eventos de clic a los nuevos doctores
+  document.querySelectorAll('.opcion-doctor').forEach(el => {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
+      this.classList.add('seleccionado');
+      document.getElementById('doctor').value = this.dataset.doctor;
+    });
+  });
 }
 
-// Selección de sede (con filtro de doctores)
+// Selección de sede
 document.querySelectorAll('.opcion-sede').forEach(el => {
   el.addEventListener('click', function() {
     document.querySelectorAll('.opcion-sede').forEach(s => s.classList.remove('seleccionada'));
     this.classList.add('seleccionada');
-    document.getElementById('centroMedico').value = this.dataset.sede;
-    // Filtrar doctores según la sede elegida
-    filtrarDoctoresPorSede(this.dataset.sede);
-  });
-});
-
-// Selección de doctor
-document.querySelectorAll('.opcion-doctor').forEach(el => {
-  el.addEventListener('click', function() {
-    document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
-    this.classList.add('seleccionado');
-    document.getElementById('doctor').value = this.dataset.doctor;
+    const sede = this.dataset.sede;
+    document.getElementById('centroMedico').value = sede;
+    
+    // Limpiar doctor seleccionado
+    document.getElementById('doctor').value = "";
+    
+    // Mostrar doctores de la sede seleccionada
+    mostrarDoctoresPorSede(sede);
   });
 });
 
@@ -459,7 +539,6 @@ function eliminarCita(id) {
 }
 
 function descargarPDF(idCita) {
-  // Buscar la cita específica
   fetch(`${API_URL}/citas`)
     .then(res => res.json())
     .then(citas => {
@@ -470,7 +549,6 @@ function descargarPDF(idCita) {
         return;
       }
       
-      // Crear el contenido del PDF
       const contenido = `
         <!DOCTYPE html>
         <html>
@@ -538,12 +616,10 @@ function descargarPDF(idCita) {
         </html>
       `;
       
-      // Crear un elemento temporal para generar el PDF
       const element = document.createElement('div');
       element.innerHTML = contenido;
       document.body.appendChild(element);
       
-      // Generar PDF
       html2pdf().from(element).set({
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: `cita_${cita.fecha}_${cita.hora}.pdf`,
@@ -557,11 +633,17 @@ function descargarPDF(idCita) {
 
 function limpiarSeleccion() {
   document.querySelectorAll('.opcion-sede').forEach(s => s.classList.remove('seleccionada'));
-  document.querySelectorAll('.opcion-doctor').forEach(d => d.classList.remove('seleccionado'));
   document.getElementById('centroMedico').value = "";
   document.getElementById('doctor').value = "";
   document.getElementById('fecha').value = "";
   document.getElementById('hora').value = "";
+  
+  // Resetear doctores
+  const container = document.getElementById("doctoresContainer");
+  container.innerHTML = `
+    <h4>Primero selecciona una sede</h4>
+    <div class="doctores-vacio">🏥 Elige una sede para ver los doctores disponibles</div>
+  `;
 }
 
 // Cargar citas al entrar
