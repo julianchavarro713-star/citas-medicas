@@ -585,170 +585,207 @@ function descargarPDF(idCita) {
         return;
       }
       
-      // Formatear fecha
+      // Obtener teléfono del usuario actual
+      const usuarioActual = JSON.parse(localStorage.getItem("usuario"));
+      const telefonoUsuario = usuarioActual.telefono || "No registrado";
+      
       const fechaFormateada = cita.fecha.split('T')[0];
-      const motivoTexto = (cita.motivo && cita.motivo !== "No especificado") ? cita.motivo : "No especificado";
+      const fechaEmision = new Date().toLocaleString();
+      const idCorta = idCita.substring(0, 8).toUpperCase();
+      const motivoTexto = (cita.motivo && cita.motivo !== "No especificado") ? cita.motivo : "Control y Seguimiento";
+      
+      // Direcciones por sede
+      const direccionesSedes = {
+        "Urgencias Toberin": "Calle 45 #20-30, Toberín",
+        "La Cardio": "Avenida 19 #120-45, Chapinero",
+        "Colina": "Carrera 7 #180-50, Usaquén"
+      };
+      
+      // Consultorio por sede
+      const consultorio = cita.centroMedico === "Urgencias Toberin" ? "Consultorio 101" :
+                          cita.centroMedico === "La Cardio" ? "Consultorio 205" : "Consultorio 308";
+      
+      // Obtener especialidad del doctor
+      let especialidad = "";
+      for (let sede in doctoresPorSede) {
+        const doctor = doctoresPorSede[sede].find(d => d.nombre === cita.doctor);
+        if (doctor) {
+          especialidad = doctor.especialidad;
+          break;
+        }
+      }
+      
+      const estado = "CONFIRMADA";
       
       const contenido = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>Comprobante de Cita Médica</title>
+          <title>Comprobante Cita Médica</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-              font-family: 'Segoe UI', Arial, sans-serif; 
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              padding: 40px;
-              min-height: 100vh;
+            body {
+              font-family: 'Segoe UI', Arial, sans-serif;
+              background: #f0f2f5;
+              padding: 30px;
               display: flex;
               justify-content: center;
               align-items: center;
+              min-height: 100vh;
             }
-            .pdf-container { 
-              max-width: 550px; 
-              margin: 0 auto; 
-              background: white; 
-              border-radius: 25px; 
-              box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+            .comprobante {
+              max-width: 550px;
+              width: 100%;
+              background: white;
+              border-radius: 20px;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.15);
               overflow: hidden;
             }
-            .pdf-header { 
-              background: linear-gradient(135deg, #4facfe, #00f2fe); 
-              color: white; 
-              padding: 30px; 
-              text-align: center; 
-            }
-            .pdf-header h1 { 
-              font-size: 28px; 
-              margin-bottom: 5px; 
-              letter-spacing: 2px;
-            }
-            .pdf-header p { 
-              font-size: 14px; 
-              opacity: 0.9; 
-            }
-            .pdf-body { 
-              padding: 30px; 
-            }
-            .campo { 
-              margin-bottom: 18px; 
-              padding: 12px; 
-              background: #f8f9fa;
-              border-radius: 12px;
-              border-left: 4px solid #4facfe;
-            }
-            .campo strong { 
-              color: #4facfe; 
-              display: inline-block; 
-              width: 100px; 
-              font-size: 13px; 
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .campo span { 
-              color: #333; 
-              font-size: 14px; 
-              font-weight: 500;
-            }
-            .campo-motivo {
-              background: #e8f4f8;
-              border-left-color: #28a745;
-            }
-            .pdf-footer { 
-              background: #f8f9fa; 
-              padding: 20px; 
-              text-align: center; 
-              border-top: 1px solid #e0e0e0;
-            }
-            .pdf-footer p { 
-              color: #666; 
-              font-size: 11px; 
-              margin: 5px 0;
-            }
-            .qr-mensaje {
+            .header {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              padding: 25px 20px;
               text-align: center;
-              margin-top: 15px;
+            }
+            .header h1 {
+              font-size: 22px;
+              letter-spacing: 2px;
+              margin-bottom: 5px;
+            }
+            .header p {
+              font-size: 11px;
+              opacity: 0.9;
+            }
+            .seccion {
+              background: #f0f2f5;
+              padding: 10px 20px;
+              font-weight: bold;
+              color: #667eea;
+              font-size: 13px;
+              border-bottom: 2px solid #667eea;
+            }
+            .fila {
+              display: flex;
+              padding: 12px 20px;
+              border-bottom: 1px solid #f0f0f0;
+            }
+            .fila-label {
+              width: 110px;
+              font-weight: bold;
+              color: #555;
+              font-size: 12px;
+            }
+            .fila-valor {
+              flex: 1;
+              color: #333;
+              font-size: 12px;
+            }
+            .estado {
+              color: #28a745;
+              font-weight: bold;
+            }
+            .footer {
+              background: #f8f9fa;
+              padding: 15px;
+              text-align: center;
               font-size: 10px;
-              color: #4facfe;
+              color: #888;
+              border-top: 1px solid #e0e0e0;
             }
           </style>
         </head>
         <body>
-          <div class="pdf-container">
-            <div class="pdf-header">
-              <h1>🏥 CLÍNICA MÉDICA</h1>
-              <p>Comprobante de Cita</p>
+          <div class="comprobante">
+            <div class="header">
+              <h1>🏥 MediCitas Pro</h1>
+              <p>COMPROBANTE DE CITA MÉDICA</p>
+              <p style="font-size: 9px;">Fecha de emisión: ${fechaEmision}</p>
             </div>
-            <div class="pdf-body">
-              <div class="campo">
-                <strong>👤 PACIENTE:</strong> 
-                <span>${cita.paciente || 'No especificado'}</span>
-              </div>
-              <div class="campo">
-                <strong>📅 FECHA:</strong> 
-                <span>${fechaFormateada || 'No especificada'}</span>
-              </div>
-              <div class="campo">
-                <strong>⏰ HORA:</strong> 
-                <span>${cita.hora || 'No especificada'}</span>
-              </div>
-              <div class="campo">
-                <strong>👨‍⚕️ DOCTOR:</strong> 
-                <span>${cita.doctor || 'No especificado'}</span>
-              </div>
-              <div class="campo">
-                <strong>🏥 SEDE:</strong> 
-                <span>${cita.centroMedico || 'No especificada'}</span>
-              </div>
-              <div class="campo campo-motivo">
-                <strong>📋 MOTIVO:</strong> 
-                <span>${motivoTexto}</span>
-              </div>
-              <div class="campo">
-                <strong>🆔 ID CITA:</strong> 
-                <span>${idCita.substring(0, 12)}...</span>
-              </div>
+            
+            <div class="seccion">📋 DATOS DE LA CITA</div>
+            <div class="fila">
+              <div class="fila-label">Número de cita:</div>
+              <div class="fila-valor">${idCorta}</div>
             </div>
-            <div class="pdf-footer">
-              <p>📌 Por favor llegar con <strong>15 minutos de anticipación</strong></p>
-              <p>📅 Generado el ${new Date().toLocaleString()}</p>
-              <p class="qr-mensaje">✓ Comprobante válido para presentar en la cita</p>
+            <div class="fila">
+              <div class="fila-label">Paciente:</div>
+              <div class="fila-valor">${cita.paciente}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Teléfono:</div>
+              <div class="fila-valor">${telefonoUsuario}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Fecha:</div>
+              <div class="fila-valor">${fechaFormateada}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Hora:</div>
+              <div class="fila-valor">${cita.hora}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Estado:</div>
+              <div class="fila-valor estado">${estado}</div>
+            </div>
+            
+            <div class="seccion">🏥 DATOS DEL CENTRO MÉDICO</div>
+            <div class="fila">
+              <div class="fila-label">Centro:</div>
+              <div class="fila-valor">${cita.centroMedico}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Dirección:</div>
+              <div class="fila-valor">${direccionesSedes[cita.centroMedico] || "Dirección no disponible"}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Consultorio:</div>
+              <div class="fila-valor">${consultorio}</div>
+            </div>
+            
+            <div class="seccion">👨‍⚕️ DATOS DEL ESPECIALISTA</div>
+            <div class="fila">
+              <div class="fila-label">Doctor:</div>
+              <div class="fila-valor">${cita.doctor}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Especialidad:</div>
+              <div class="fila-valor">${especialidad || "Médico General"}</div>
+            </div>
+            <div class="fila">
+              <div class="fila-label">Tipo de cita:</div>
+              <div class="fila-valor">${motivoTexto}</div>
+            </div>
+            
+            <div class="footer">
+              <p>Gracias por confiar en MediCitas Pro</p>
+              <p>www.medicitaspro.com</p>
             </div>
           </div>
         </body>
         </html>
       `;
       
-      // Crear iframe para PDF
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.left = '-9999px';
-      iframe.style.top = '-9999px';
-      iframe.style.width = '800px';
-      iframe.style.height = '600px';
-      document.body.appendChild(iframe);
+      // Crear elemento temporal y generar PDF
+      const element = document.createElement('div');
+      element.innerHTML = contenido;
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '-9999px';
+      document.body.appendChild(element);
       
-      iframe.contentWindow.document.open();
-      iframe.contentWindow.document.write(contenido);
-      iframe.contentWindow.document.close();
-      
-      setTimeout(() => {
-        html2pdf().from(iframe.contentWindow.document.body).set({
-          margin: [0.5, 0.5, 0.5, 0.5],
-          filename: `cita_${cita.paciente}_${fechaFormateada}.pdf`,
-          html2canvas: { scale: 2, logging: false },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        }).save().then(() => {
-          document.body.removeChild(iframe);
-          console.log("PDF generado");
-        }).catch(err => {
-          console.error("Error PDF:", err);
-          alert("❌ Error al generar el PDF");
-          document.body.removeChild(iframe);
-        });
-      }, 800);
+      html2pdf().from(element).set({
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `Cita_${cita.paciente}_${fechaFormateada}.pdf`,
+        html2canvas: { scale: 2, logging: false },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).save().then(() => {
+        document.body.removeChild(element);
+      }).catch(err => {
+        console.error("Error:", err);
+        alert("❌ Error al generar el PDF");
+        document.body.removeChild(element);
+      });
     })
     .catch(error => {
       console.error("Error:", error);
