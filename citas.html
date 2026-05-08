@@ -539,16 +539,20 @@ function eliminarCita(id) {
 }
 
 function descargarPDF(idCita) {
+  // Mostrar mensaje de carga
+  const loadingMsg = alert("⏳ Generando PDF, por favor espera...");
+  
   fetch(`${API_URL}/citas`)
     .then(res => res.json())
     .then(citas => {
       const cita = citas.find(c => c._id === idCita);
       
       if (!cita) {
-        alert("No se encontró la cita");
+        alert("❌ No se encontró la cita");
         return;
       }
       
+      // Crear el HTML del PDF
       const contenido = `
         <!DOCTYPE html>
         <html>
@@ -556,78 +560,76 @@ function descargarPDF(idCita) {
           <meta charset="UTF-8">
           <title>Comprobante de Cita Médica</title>
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 40px;
-            }
-            h1 {
-              color: #4facfe;
-              text-align: center;
-            }
-            .comprobante {
-              border: 1px solid #ddd;
-              padding: 20px;
-              border-radius: 10px;
-              max-width: 500px;
-              margin: 0 auto;
-            }
-            .campo {
-              margin: 15px 0;
-              padding: 8px;
-              border-bottom: 1px solid #eee;
-            }
-            .campo strong {
-              color: #333;
-            }
-            .fecha {
-              text-align: center;
-              margin-top: 30px;
-              color: #999;
-              font-size: 12px;
-            }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #f0f0f0; }
+            .pdf-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+            .pdf-header { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 30px; text-align: center; }
+            .pdf-header h1 { font-size: 28px; margin-bottom: 5px; }
+            .pdf-header p { font-size: 14px; opacity: 0.9; }
+            .pdf-body { padding: 30px; }
+            .campo { margin-bottom: 20px; padding: 10px; border-bottom: 2px solid #f0f0f0; }
+            .campo strong { color: #4facfe; display: inline-block; width: 120px; font-size: 14px; }
+            .campo span { color: #333; font-size: 14px; }
+            .pdf-footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; }
+            .mensaje-final { text-align: center; margin-top: 15px; color: #4facfe; font-size: 12px; }
           </style>
         </head>
         <body>
-          <div class="comprobante">
-            <h1>🏥 Clínica Médica</h1>
-            <h2 style="text-align:center;">Comprobante de Cita</h2>
-            
-            <div class="campo">
-              <strong>👤 Paciente:</strong> ${cita.paciente}
+          <div class="pdf-container">
+            <div class="pdf-header">
+              <h1>🏥 Clínica Médica</h1>
+              <p>Comprobante de Cita</p>
             </div>
-            <div class="campo">
-              <strong>📅 Fecha:</strong> ${cita.fecha}
+            <div class="pdf-body">
+              <div class="campo"><strong>👤 Paciente:</strong> <span>${cita.paciente || 'No especificado'}</span></div>
+              <div class="campo"><strong>📅 Fecha:</strong> <span>${cita.fecha || 'No especificada'}</span></div>
+              <div class="campo"><strong>⏰ Hora:</strong> <span>${cita.hora || 'No especificada'}</span></div>
+              <div class="campo"><strong>👨‍⚕️ Doctor:</strong> <span>${cita.doctor || 'No especificado'}</span></div>
+              <div class="campo"><strong>🏥 Sede:</strong> <span>${cita.centroMedico || 'No especificada'}</span></div>
+              <div class="campo"><strong>🆔 ID Cita:</strong> <span>${idCita.substring(0, 12)}...</span></div>
             </div>
-            <div class="campo">
-              <strong>⏰ Hora:</strong> ${cita.hora}
-            </div>
-            <div class="campo">
-              <strong>👨‍⚕️ Doctor:</strong> ${cita.doctor}
-            </div>
-            <div class="campo">
-              <strong>🏥 Sede:</strong> ${cita.centroMedico}
-            </div>
-            
-            <div class="fecha">
-              Generado el ${new Date().toLocaleString()}
+            <div class="pdf-footer">
+              <p>📌 Por favor llegar con 15 minutos de anticipación</p>
+              <p class="mensaje-final">✓ Generado el ${new Date().toLocaleString()}</p>
             </div>
           </div>
         </body>
         </html>
       `;
       
-      const element = document.createElement('div');
-      element.innerHTML = contenido;
-      document.body.appendChild(element);
+      // Crear un iframe oculto para generar el PDF
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '-9999px';
+      iframe.style.width = '800px';
+      iframe.style.height = '600px';
+      document.body.appendChild(iframe);
       
-      html2pdf().from(element).set({
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: `cita_${cita.fecha}_${cita.hora}.pdf`,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      }).save().then(() => {
-        document.body.removeChild(element);
-      });
+      iframe.contentWindow.document.open();
+      iframe.contentWindow.document.write(contenido);
+      iframe.contentWindow.document.close();
+      
+      // Esperar a que cargue el contenido
+      setTimeout(() => {
+        html2pdf().from(iframe.contentWindow.document.body).set({
+          margin: [0.5, 0.5, 0.5, 0.5],
+          filename: `cita_${cita.fecha}_${cita.hora.replace(/:/g, '-')}.pdf`,
+          html2canvas: { scale: 2, logging: false, useCORS: true },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        }).save().then(() => {
+          document.body.removeChild(iframe);
+          console.log("PDF generado correctamente");
+        }).catch(err => {
+          console.error("Error generando PDF:", err);
+          alert("❌ Error al generar el PDF");
+          document.body.removeChild(iframe);
+        });
+      }, 1000);
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("❌ Error al obtener los datos de la cita");
     });
 }
 
