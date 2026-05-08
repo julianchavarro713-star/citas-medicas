@@ -5,7 +5,8 @@ const CitaSchema = new mongoose.Schema({
   fecha: String,
   hora: String,
   doctor: String,
-  centroMedico: String
+  centroMedico: String,
+  motivo: String  
 });
 
 module.exports = mongoose.model("Cita", CitaSchema);
