@@ -411,11 +411,11 @@ function mostrarDoctoresPorSede(sede) {
     return;
   }
   
-  let html = `<h4>👨‍⚕️ Doctores disponibles en ${sede}</h4>\n<div class="doctores">\n`;
+  let html = `<h4>Doctores disponibles en ${sede}</h4><div class="doctores">`;
   doctores.forEach(doctor => {
-    html += `<div class="opcion-doctor" data-doctor="${doctor.nombre}" data-especialidad="${doctor.especialidad}">👨‍⚕️ ${doctor.nombre} - ${doctor.especialidad}</div>\n`;
+    html += `<div class="opcion-doctor" data-doctor="${doctor.nombre}" data-especialidad="${doctor.especialidad}">👨‍⚕️ ${doctor.nombre} - ${doctor.especialidad}</div>`;
   });
-  html += `</div>\n`;
+  html += `</div>`;
   container.innerHTML = html;
   
   document.querySelectorAll('.opcion-doctor').forEach(el => {
@@ -452,14 +452,11 @@ function crearCita() {
   const motivo = document.getElementById("motivo").value;
 
   if (!centroMedico || !doctor || !fecha || !hora) {
-    alert("⚠️ Por favor complete todos los campos obligatorios");
+    alert("⚠️ Por favor complete todos los campos");
     return;
   }
 
-  const datos = {
-    paciente, fecha, hora, doctor, centroMedico,
-    motivo: motivo || "No especificado"
-  };
+  const datos = { paciente, fecha, hora, doctor, centroMedico, motivo: motivo || "No especificado" };
 
   fetch(`${API_URL}/citas`, {
     method: "POST",
@@ -472,7 +469,7 @@ function crearCita() {
       alert(error.error);
       throw new Error("Horario no disponible");
     }
-    if (!res.ok) throw new Error("Error al agendar");
+    if (!res.ok) throw new Error("Error");
     return res.json();
   })
   .then(data => {
@@ -482,7 +479,7 @@ function crearCita() {
   })
   .catch(error => {
     if (error.message !== "Horario no disponible") {
-      alert("❌ Error al agendar la cita. Intenta de nuevo.");
+      alert("❌ Error al agendar la cita");
     }
   });
 }
@@ -522,7 +519,7 @@ function verCitas() {
 }
 
 function eliminarCita(id) {
-  if (confirm("¿Estás seguro de cancelar esta cita?")) {
+  if (confirm("¿Cancelar esta cita?")) {
     fetch(`${API_URL}/citas/${id}`, { method: "DELETE" })
       .then(() => {
         alert("Cita cancelada");
@@ -537,7 +534,7 @@ function descargarPDF(idCita) {
     .then(citas => {
       const cita = citas.find(c => c._id === idCita);
       if (!cita) {
-        alert("❌ No se encontró la cita");
+        alert("No se encontró la cita");
         return;
       }
       
@@ -560,64 +557,49 @@ function descargarPDF(idCita) {
       let especialidad = "";
       for (let sede in doctoresPorSede) {
         const doctor = doctoresPorSede[sede].find(d => d.nombre === cita.doctor);
-        if (doctor) {
-          especialidad = doctor.especialidad;
-          break;
-        }
+        if (doctor) { especialidad = doctor.especialidad; break; }
       }
       
       const ventana = window.open('', '_blank');
       ventana.document.write(`
         <!DOCTYPE html>
         <html>
-        <head>
-          <title>Comprobante de Cita</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-            .container { max-width: 550px; margin: 0 auto; border: 2px solid #4facfe; border-radius: 15px; overflow: hidden; }
-            .header { background: #4facfe; color: white; text-align: center; padding: 20px; }
-            .header h1 { margin: 0; font-size: 24px; }
-            .header p { margin: 5px 0 0; font-size: 12px; }
-            .section { background: #f0f2f5; padding: 10px 15px; font-weight: bold; border-bottom: 2px solid #4facfe; }
-            .row { display: flex; padding: 10px 15px; border-bottom: 1px solid #eee; }
-            .label { width: 120px; font-weight: bold; color: #555; }
-            .value { flex: 1; color: #333; }
-            .footer { background: #f5f5f5; text-align: center; padding: 15px; font-size: 11px; color: #888; }
-            .estado { color: #28a745; font-weight: bold; }
-          </style>
+        <head><title>Comprobante Cita</title>
+        <style>
+          body { font-family: Arial; padding: 30px; }
+          .caja { max-width: 550px; margin: 0 auto; border: 2px solid #4facfe; border-radius: 15px; padding: 20px; }
+          .azul { background: #4facfe; color: white; text-align: center; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 13px 13px 0 0; }
+          .azul h1 { margin: 0; font-size: 22px; }
+          .seccion { background: #eee; padding: 8px 12px; margin: 15px 0 10px; font-weight: bold; }
+          .fila { padding: 8px 0; border-bottom: 1px solid #ddd; }
+          .label { font-weight: bold; display: inline-block; width: 120px; }
+          .footer { text-align: center; margin-top: 20px; font-size: 11px; color: gray; }
+        </style>
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>🏥 MediCitas Pro</h1>
-              <p>COMPROBANTE DE CITA MÉDICA</p>
-              <p>${fechaEmision}</p>
-            </div>
-            <div class="section">📋 DATOS DE LA CITA</div>
-            <div class="row"><div class="label">Número:</div><div class="value">${idCorta}</div></div>
-            <div class="row"><div class="label">Paciente:</div><div class="value">${cita.paciente}</div></div>
-            <div class="row"><div class="label">Teléfono:</div><div class="value">${telefonoUsuario}</div></div>
-            <div class="row"><div class="label">Fecha:</div><div class="value">${fechaFormateada}</div></div>
-            <div class="row"><div class="label">Hora:</div><div class="value">${cita.hora}</div></div>
-            <div class="row"><div class="label">Estado:</div><div class="value estado">CONFIRMADA</div></div>
-            <div class="section">🏥 CENTRO MÉDICO</div>
-            <div class="row"><div class="label">Centro:</div><div class="value">${cita.centroMedico}</div></div>
-            <div class="row"><div class="label">Dirección:</div><div class="value">${direccionesSedes[cita.centroMedico] || "No disponible"}</div></div>
-            <div class="row"><div class="label">Consultorio:</div><div class="value">${consultorio}</div></div>
-            <div class="section">👨‍⚕️ ESPECIALISTA</div>
-            <div class="row"><div class="label">Doctor:</div><div class="value">${cita.doctor}</div></div>
-            <div class="row"><div class="label">Especialidad:</div><div class="value">${especialidad || "Médico General"}</div></div>
-            <div class="row"><div class="label">Tipo de cita:</div><div class="value">${motivoTexto}</div></div>
-            <div class="footer"><p>Gracias por confiar en MediCitas Pro</p></div>
+          <div class="caja">
+            <div class="azul"><h1>🏥 MediCitas Pro</h1><p>COMPROBANTE DE CITA</p><p>${fechaEmision}</p></div>
+            <div class="seccion">📋 DATOS DE LA CITA</div>
+            <div class="fila"><span class="label">Número:</span> ${idCorta}</div>
+            <div class="fila"><span class="label">Paciente:</span> ${cita.paciente}</div>
+            <div class="fila"><span class="label">Teléfono:</span> ${telefonoUsuario}</div>
+            <div class="fila"><span class="label">Fecha:</span> ${fechaFormateada}</div>
+            <div class="fila"><span class="label">Hora:</span> ${cita.hora}</div>
+            <div class="seccion">🏥 CENTRO MÉDICO</div>
+            <div class="fila"><span class="label">Centro:</span> ${cita.centroMedico}</div>
+            <div class="fila"><span class="label">Dirección:</span> ${direccionesSedes[cita.centroMedico] || "No disponible"}</div>
+            <div class="fila"><span class="label">Consultorio:</span> ${consultorio}</div>
+            <div class="seccion">👨‍⚕️ ESPECIALISTA</div>
+            <div class="fila"><span class="label">Doctor:</span> ${cita.doctor}</div>
+            <div class="fila"><span class="label">Especialidad:</span> ${especialidad || "Médico General"}</div>
+            <div class="fila"><span class="label">Tipo cita:</span> ${motivoTexto}</div>
+            <div class="footer">Gracias por confiar en MediCitas Pro</div>
           </div>
         </body>
         </html>
       `);
       ventana.document.close();
-      
-      setTimeout(() => {
-        ventana.print();
-      }, 500);
+      setTimeout(() => { ventana.print(); }, 500);
     });
 }
 
@@ -628,8 +610,7 @@ function limpiarSeleccion() {
   document.getElementById('fecha').value = "";
   document.getElementById('hora').value = "";
   document.getElementById('motivo').value = "";
-  const container = document.getElementById("doctoresContainer");
-  container.innerHTML = `<h4>Primero selecciona una sede</h4><div class="doctores-vacio">🏥 Elige una sede para ver los doctores disponibles</div>`;
+  document.getElementById("doctoresContainer").innerHTML = `<h4>Primero selecciona una sede</h4><div class="doctores-vacio">🏥 Elige una sede para ver los doctores disponibles</div>`;
 }
 
 verCitas();
