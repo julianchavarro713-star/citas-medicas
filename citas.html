@@ -2,360 +2,124 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Citas Médicas</title>
+    <title>Mis Citas Médicas</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            margin-bottom: 10px;
-        }
-
-        .formulario {
-            padding: 30px;
-        }
-
-        .campo {
-            margin-bottom: 20px;
-        }
-
-        .campo label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .campo input, .campo select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn-cerrar {
-            background: linear-gradient(135deg, #ff4444, #cc0000);
-        }
-
-        .btn-ver {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-        }
-
-        .btn-pdf {
-            background: linear-gradient(135deg, #28a745, #1e7e34);
-            margin-left: 10px;
-            width: auto;
-            padding: 8px 15px;
-            margin-top: 0;
-        }
-
-        .lista {
-            margin-top: 30px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .cita-card {
-            background: white;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .cita-info {
-            flex: 1;
-        }
-
-        .cita-acciones {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-eliminar {
-            background: #ff4444;
-            padding: 8px 15px;
-            font-size: 12px;
-            width: auto;
-            margin-top: 0;
-        }
-
-        .info-usuario {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
-            font-family: inherit;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; }
+        .formulario { padding: 20px; }
+        .campo { margin-bottom: 15px; }
+        .campo label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .campo input, .campo select, .campo textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        button { width: 100%; padding: 10px; margin-top: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-cerrar { background: #ff4444; }
+        .btn-ver { background: #2196F3; }
+        .cita-card { background: #f8f9fa; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center; }
+        .cita-acciones button { width: auto; margin-top: 0; margin-left: 5px; padding: 5px 10px; font-size: 12px; }
+        .btn-pdf { background: #28a745; }
+        .btn-eliminar { background: #ff4444; }
+        .info-usuario { background: #e8f4f8; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1>🏥 Sistema de Gestión de Citas Médicas</h1>
-        <p>Agende, consulte y gestione sus citas médicas</p>
-    </div>
-
+    <div class="header"><h1>🏥 Mis Citas Médicas</h1></div>
     <div class="formulario">
         <div id="infoUsuario" class="info-usuario"></div>
-
         <div class="grid-2">
-            <div class="campo">
-                <label>👤 Paciente</label>
-                <input type="text" id="paciente" readonly>
-            </div>
-            <div class="campo">
-                <label>📅 Fecha</label>
-                <input type="date" id="fecha">
-            </div>
-            <div class="campo">
-                <label>⏰ Hora</label>
-                <input type="time" id="hora">
-            </div>
-            <div class="campo">
-                <label>🏥 Sede</label>
-                <select id="centroMedico">
-                    <option value="">Seleccione</option>
-                    <option value="Urgencias Toberin">Urgencias Toberin</option>
-                    <option value="La Cardio">La Cardio</option>
-                    <option value="Colina">Colina</option>
-                </select>
-            </div>
-            <div class="campo">
-                <label>👨‍⚕️ Doctor</label>
-                <select id="doctor">
-                    <option value="">Seleccione</option>
-                    <option value="Julian Chavarro - Cardiólogo">Dr. Julian Chavarro - Cardiólogo</option>
-                    <option value="Camilo Carrillo - Médico General">Dr. Camilo Carrillo - Médico General</option>
-                    <option value="Andrea Cardenas - Pediatra">Dra. Andrea Cardenas - Pediatra</option>
-                </select>
-            </div>
-            <div class="campo">
-                <label>📋 Motivo (opcional)</label>
-                <textarea id="motivo" rows="2" placeholder="Ej: Dolor de cabeza, control médico..."></textarea>
-            </div>
+            <div class="campo"><label>📅 Fecha</label><input type="date" id="fecha"></div>
+            <div class="campo"><label>⏰ Hora</label><input type="time" id="hora"></div>
+            <div class="campo"><label>🏥 Sede</label><select id="centroMedico"><option value="">Seleccione</option><option value="Urgencias Toberin">Urgencias Toberin</option><option value="La Cardio">La Cardio</option><option value="Colina">Colina</option></select></div>
+            <div class="campo"><label>👨‍⚕️ Doctor</label><select id="doctor"><option value="">Seleccione</option><option value="Julian Chavarro">Dr. Julian Chavarro</option><option value="Camilo Carrillo">Dr. Camilo Carrillo</option><option value="Andrea Cardenas">Dra. Andrea Cardenas</option></select></div>
         </div>
-
-        <button onclick="crearCita()">📅 Agendar Cita</button>
-        <button onclick="verCitas()" class="btn-ver">📋 Ver Mis Citas</button>
+        <div class="campo"><label>📋 Motivo</label><textarea id="motivo" rows="2"></textarea></div>
+        <button onclick="agendarCita()">📅 Agendar Cita</button>
+        <button onclick="cargarCitas()" class="btn-ver">📋 Ver Mis Citas</button>
         <button onclick="cerrarSesion()" class="btn-cerrar">🚪 Cerrar Sesión</button>
-
-        <div id="lista" class="lista">
-            <h3>📌 Mis Citas</h3>
-            <div id="citasLista"></div>
-        </div>
+        <div id="listaCitas" style="margin-top: 20px;"></div>
     </div>
 </div>
-
 <script>
 const API_URL = "https://citas-medicas-slg0.onrender.com";
 
 const usuario = localStorage.getItem("usuario");
-if (!usuario) {
-    alert("Inicie sesión primero");
-    window.location.href = "login.html";
-}
+if (!usuario) { alert("Inicie sesión"); window.location.href = "login.html"; }
+const user = JSON.parse(usuario);
+document.getElementById("infoUsuario").innerHTML = `👋 Hola, ${user.nombre} | ${user.correo}`;
 
-const userData = JSON.parse(usuario);
-document.getElementById("paciente").value = userData.nombre;
-document.getElementById("infoUsuario").innerHTML = `👋 Bienvenido, ${userData.nombre} | 📧 ${userData.correo}`;
+function cerrarSesion() { localStorage.removeItem("usuario"); window.location.href = "login.html"; }
 
-function cerrarSesion() {
-    localStorage.removeItem("usuario");
-    window.location.href = "login.html";
-}
-
-function crearCita() {
-    const datos = {
-        paciente: document.getElementById("paciente").value,
+function agendarCita() {
+    const cita = {
+        paciente: user.nombre,
         fecha: document.getElementById("fecha").value,
         hora: document.getElementById("hora").value,
         doctor: document.getElementById("doctor").value,
         centroMedico: document.getElementById("centroMedico").value,
-        motivo: document.getElementById("motivo").value || "No especificado"
+        motivo: document.getElementById("motivo").value || "Consulta general"
     };
-
-    if (!datos.fecha || !datos.hora || !datos.doctor || !datos.centroMedico) {
-        alert("Complete todos los campos");
-        return;
-    }
-
+    if (!cita.fecha || !cita.hora || !cita.doctor || !cita.centroMedico) { alert("Complete todos los campos"); return; }
     fetch(`${API_URL}/citas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert("✅ Cita agendada");
-        verCitas();
-        limpiarFormulario();
-    })
-    .catch(err => alert("Error al agendar"));
+        body: JSON.stringify(cita)
+    }).then(res => res.json()).then(() => { alert("✅ Cita agendada"); cargarCitas(); limpiar(); }).catch(() => alert("Error"));
 }
 
-function verCitas() {
-    fetch(`${API_URL}/citas`)
-        .then(res => res.json())
-        .then(data => {
-            const citasDiv = document.getElementById("citasLista");
-            const misCitas = data.filter(c => c.paciente === userData.nombre);
-            
-            if (misCitas.length === 0) {
-                citasDiv.innerHTML = '<div class="mensaje-vacio">📭 No hay citas</div>';
-                return;
-            }
-            
-            citasDiv.innerHTML = "";
-            misCitas.forEach(c => {
-                const div = document.createElement("div");
-                div.className = "cita-card";
-                div.innerHTML = `
-                    <div class="cita-info">
-                        <strong>📅 ${c.fecha} - ⏰ ${c.hora}</strong>
-                        <p>👨‍⚕️ ${c.doctor} | 🏥 ${c.centroMedico}</p>
-                        <small>📋 ${c.motivo || "Sin motivo"}</small>
-                    </div>
+function cargarCitas() {
+    fetch(`${API_URL}/citas`).then(res => res.json()).then(data => {
+        const misCitas = data.filter(c => c.paciente === user.nombre);
+        const contenedor = document.getElementById("listaCitas");
+        if (misCitas.length === 0) { contenedor.innerHTML = "<p>No hay citas</p>"; return; }
+        contenedor.innerHTML = "";
+        misCitas.forEach(c => {
+            contenedor.innerHTML += `
+                <div class="cita-card">
+                    <div><strong>${c.fecha} - ${c.hora}</strong><br>👨‍⚕️ ${c.doctor}<br>🏥 ${c.centroMedico}<br>📋 ${c.motivo}</div>
                     <div class="cita-acciones">
-                        <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
-                        <button class="btn-pdf" onclick="generarPDF('${c._id}', '${c.paciente}', '${c.fecha}', '${c.hora}', '${c.doctor}', '${c.centroMedico}', '${c.motivo || "No especificado"}')">📄 PDF</button>
+                        <button class="btn-pdf" onclick="descargarPDF('${c._id}', '${c.paciente}', '${c.fecha}', '${c.hora}', '${c.doctor}', '${c.centroMedico}', '${c.motivo}')">📄 PDF</button>
+                        <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌</button>
                     </div>
-                `;
-                citasDiv.appendChild(div);
-            });
+                </div>`;
         });
+    });
 }
 
-function eliminarCita(id) {
-    if (confirm("¿Cancelar cita?")) {
-        fetch(`${API_URL}/citas/${id}`, { method: "DELETE" })
-            .then(() => verCitas());
-    }
-}
+function eliminarCita(id) { if(confirm("¿Cancelar?")) fetch(`${API_URL}/citas/${id}`,{method:"DELETE"}).then(()=>cargarCitas()); }
 
-function generarPDF(id, paciente, fecha, hora, doctor, centroMedico, motivo) {
-    const fechaActual = new Date().toLocaleString();
-    const idCorta = id.substring(0, 8).toUpperCase();
-    
-    const direcciones = {
-        "Urgencias Toberin": "Calle 45 #20-30, Toberín",
-        "La Cardio": "Avenida 19 #120-45, Chapinero",
-        "Colina": "Carrera 7 #180-50, Usaquén"
-    };
-    
+function descargarPDF(id, paciente, fecha, hora, doctor, centro, motivo) {
+    const direcciones = { "Urgencias Toberin": "Calle 45 #20-30", "La Cardio": "Av 19 #120-45", "Colina": "Carrera 7 #180-50" };
     const contenido = `
         <html>
-        <head>
-            <title>Comprobante de Cita</title>
-            <style>
-                body { font-family: Arial; padding: 40px; }
-                .caja { max-width: 500px; margin: 0 auto; border: 2px solid #667eea; border-radius: 15px; padding: 20px; }
-                .header { background: #667eea; color: white; text-align: center; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 13px 13px 0 0; }
-                .seccion { background: #f0f0f0; padding: 8px; margin: 15px 0 10px; font-weight: bold; }
-                .fila { margin: 10px 0; }
-                .label { font-weight: bold; display: inline-block; width: 110px; }
-                .footer { text-align: center; margin-top: 20px; font-size: 11px; color: gray; }
-            </style>
+        <head><title>Comprobante</title>
+        <style>body{font-family:Arial;padding:40px}.caja{border:2px solid #667eea;border-radius:10px;padding:20px;max-width:500px;margin:auto}.header{background:#667eea;color:white;text-align:center;padding:10px;margin:-20px -20px 20px -20px}.fila{margin:10px 0}.label{font-weight:bold;display:inline-block;width:120px}</style>
         </head>
         <body>
-            <div class="caja">
-                <div class="header">
-                    <h2>🏥 MediCitas Pro</h2>
-                    <p>COMPROBANTE DE CITA</p>
-                    <p>${fechaActual}</p>
-                </div>
-                <div class="seccion">📋 DATOS DE LA CITA</div>
-                <div class="fila"><span class="label">Número:</span> ${idCorta}</div>
-                <div class="fila"><span class="label">Paciente:</span> ${paciente}</div>
-                <div class="fila"><span class="label">Fecha:</span> ${fecha}</div>
-                <div class="fila"><span class="label">Hora:</span> ${hora}</div>
-                <div class="fila"><span class="label">Estado:</span> CONFIRMADA</div>
-                <div class="seccion">🏥 DATOS DEL CENTRO</div>
-                <div class="fila"><span class="label">Centro:</span> ${centroMedico}</div>
-                <div class="fila"><span class="label">Dirección:</span> ${direcciones[centroMedico] || "No disponible"}</div>
-                <div class="seccion">👨‍⚕️ ESPECIALISTA</div>
-                <div class="fila"><span class="label">Doctor:</span> ${doctor.split(' -')[0]}</div>
-                <div class="fila"><span class="label">Motivo:</span> ${motivo}</div>
-                <div class="footer">Gracias por confiar en MediCitas Pro</div>
-            </div>
+        <div class="caja">
+            <div class="header"><h2>🏥 MediCitas Pro</h2><p>COMPROBANTE DE CITA</p><p>${new Date().toLocaleString()}</p></div>
+            <div class="fila"><span class="label">Paciente:</span> ${paciente}</div>
+            <div class="fila"><span class="label">Fecha:</span> ${fecha}</div>
+            <div class="fila"><span class="label">Hora:</span> ${hora}</div>
+            <div class="fila"><span class="label">Doctor:</span> ${doctor}</div>
+            <div class="fila"><span class="label">Centro:</span> ${centro}</div>
+            <div class="fila"><span class="label">Dirección:</span> ${direcciones[centro] || ""}</div>
+            <div class="fila"><span class="label">Motivo:</span> ${motivo}</div>
+            <div class="fila"><span class="label">Código:</span> ${id.substring(0,8)}</div>
+            <p style="text-align:center; margin-top:20px;">Gracias por su preferencia</p>
+        </div>
         </body>
         </html>
     `;
-    
-    const ventana = window.open();
-    ventana.document.write(contenido);
-    ventana.document.close();
-    ventana.print();
+    const win = window.open();
+    win.document.write(contenido);
+    win.document.close();
+    win.print();
 }
 
-function limpiarFormulario() {
-    document.getElementById("fecha").value = "";
-    document.getElementById("hora").value = "";
-    document.getElementById("doctor").value = "";
-    document.getElementById("centroMedico").value = "";
-    document.getElementById("motivo").value = "";
-}
-
-verCitas();
+function limpiar() { document.getElementById("fecha").value=""; document.getElementById("hora").value=""; document.getElementById("doctor").value=""; document.getElementById("centroMedico").value=""; document.getElementById("motivo").value=""; }
+cargarCitas();
 </script>
 </body>
 </html>
