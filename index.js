@@ -68,6 +68,8 @@ app.get("/usuarios", async (req, res) => {
 // ==================== CREAR CITA CON VALIDACIÓN ====================
 app.post("/citas", async (req, res) => {
   try {
+    console.log("📌 Datos recibidos en backend:", req.body);
+    
     const { fecha, hora, doctor } = req.body;
 
     // Verificar si ya existe una cita con la misma fecha, hora y doctor
@@ -84,9 +86,18 @@ app.post("/citas", async (req, res) => {
     }
 
     // Si no existe, crear la nueva cita
-    const nueva = new Cita(req.body);
+    const nueva = new Cita({
+      paciente: req.body.paciente,
+      fecha: req.body.fecha,
+      hora: req.body.hora,
+      doctor: req.body.doctor,
+      centroMedico: req.body.centroMedico,
+      motivo: req.body.motivo || "Consulta general"
+    });
+    
     await nueva.save();
-    res.status(201).json({ mensaje: "✅ Cita agendada exitosamente" });
+    console.log("✅ Cita guardada:", nueva);
+    res.status(201).json({ mensaje: "✅ Cita agendada exitosamente", cita: nueva });
   } catch (error) {
     console.error("Error al crear cita:", error);
     res.status(500).json({ error: error.message });

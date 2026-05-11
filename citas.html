@@ -82,10 +82,13 @@ function agendarCita() {
         centroMedico: document.getElementById("centroMedico").value,
         motivo: document.getElementById("motivo").value || "Consulta general"
     };
+    
     if (!cita.fecha || !cita.hora || !cita.doctor || !cita.centroMedico) { 
         alert("Complete todos los campos"); 
         return; 
     }
+    
+    console.log("Enviando cita:", cita);
     
     fetch(API_URL + "/citas", {
         method: "POST",
@@ -93,18 +96,22 @@ function agendarCita() {
         body: JSON.stringify(cita)
     })
     .then(response => response.json())
-    .then(() => { 
-        alert("Cita agendada correctamente"); 
+    .then(data => { 
+        alert(data.mensaje || "Cita agendada correctamente"); 
         cargarCitas(); 
         limpiar(); 
     })
-    .catch(() => alert("Error al agendar cita"));
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Error al agendar cita");
+    });
 }
 
 function cargarCitas() {
     fetch(API_URL + "/citas")
     .then(response => response.json())
     .then(data => {
+        console.log("Citas desde backend:", data);
         const misCitas = data.filter(c => c.paciente === user.nombre);
         const contenedor = document.getElementById("listaCitas");
         if (misCitas.length === 0) { 
@@ -120,7 +127,7 @@ function cargarCitas() {
                         <strong>${c.fecha} - ${c.hora}</strong><br>
                         👨‍⚕️ Doctor: ${c.doctor}<br>
                         🏥 Sede: ${c.centroMedico}<br>
-                        📋 Motivo: ${c.motivo}
+                        📋 Motivo: ${c.motivo || "No especificado"}
                     </div>
                     <div class="cita-acciones">
                         <button class="btn-pdf" onclick="generarPDF('${c._id}')">📄 PDF</button>
@@ -148,6 +155,8 @@ function generarPDF(idCita) {
             return;
         }
         
+        console.log("Generando PDF para cita:", cita);
+        
         const fechaHoy = new Date().toLocaleString();
         const direcciones = {
             "Urgencias Toberin": "Calle 45 #20-30, Toberin",
@@ -162,8 +171,8 @@ function generarPDF(idCita) {
                 <meta charset="UTF-8">
                 <title>Comprobante de Cita</title>
                 <style>
-                    body { font-family: Arial, sans-serif; padding: 40px; }
-                    .container { max-width: 550px; margin: 0 auto; border: 2px solid #667eea; border-radius: 15px; padding: 20px; }
+                    body { font-family: Arial, sans-serif; padding: 40px; background: white; }
+                    .container { max-width: 550px; margin: 0 auto; border: 2px solid #667eea; border-radius: 15px; padding: 20px; background: white; }
                     .header { background: #667eea; color: white; text-align: center; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 13px 13px 0 0; }
                     h2 { margin: 0; }
                     .seccion { background: #f0f0f0; padding: 8px; margin: 15px 0 10px; font-weight: bold; border-left: 3px solid #667eea; }
@@ -181,17 +190,17 @@ function generarPDF(idCita) {
                     </div>
                     
                     <div class="seccion">📋 DATOS DE LA CITA</div>
-                    <div class="fila"><span class="label">Paciente:</span> ${cita.paciente}</div>
-                    <div class="fila"><span class="label">Fecha:</span> ${cita.fecha}</div>
-                    <div class="fila"><span class="label">Hora:</span> ${cita.hora}</div>
+                    <div class="fila"><span class="label">Paciente:</span> ${cita.paciente || "No especificado"}</div>
+                    <div class="fila"><span class="label">Fecha:</span> ${cita.fecha || "No especificada"}</div>
+                    <div class="fila"><span class="label">Hora:</span> ${cita.hora || "No especificada"}</div>
                     <div class="fila"><span class="label">Estado:</span> CONFIRMADA</div>
                     
                     <div class="seccion">🏥 DATOS DEL CENTRO MEDICO</div>
-                    <div class="fila"><span class="label">Centro:</span> ${cita.centroMedico}</div>
+                    <div class="fila"><span class="label">Centro:</span> ${cita.centroMedico || "No especificado"}</div>
                     <div class="fila"><span class="label">Direccion:</span> ${direcciones[cita.centroMedico] || "No disponible"}</div>
                     
                     <div class="seccion">👨‍⚕️ DATOS DEL ESPECIALISTA</div>
-                    <div class="fila"><span class="label">Doctor:</span> ${cita.doctor}</div>
+                    <div class="fila"><span class="label">Doctor:</span> ${cita.doctor || "No especificado"}</div>
                     <div class="fila"><span class="label">Motivo:</span> ${cita.motivo || "Consulta general"}</div>
                     
                     <div class="footer">
