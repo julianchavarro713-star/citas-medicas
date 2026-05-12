@@ -120,15 +120,27 @@ button:hover {
     <button onclick="cargarEstadisticas()">Estadísticas</button>
     <button onclick="cargarCitas()">Ver Citas</button>
     <button onclick="cargarUsuarios()">Ver Usuarios</button>
+    <button onclick="cerrarSesionAdmin()" style="background:#ff4444; color:white;">🚪 Cerrar Sesión</button>
   </div>
   
   <div id="stats" class="stats-grid"></div>
-  
   <div id="contenido" class="tabla"></div>
 </div>
 
 <script>
 const API_URL = "https://citas-medicas-slg0.onrender.com";
+
+// Verificar autenticación del administrador
+const adminAuth = localStorage.getItem("adminAuth");
+if (!adminAuth || adminAuth !== "true") {
+    alert("Acceso no autorizado. Debe iniciar sesión como administrador.");
+    window.location.href = "admin-login.html";
+}
+
+function cerrarSesionAdmin() {
+    localStorage.removeItem("adminAuth");
+    window.location.href = "admin-login.html";
+}
 
 function cargarEstadisticas() {
   fetch(`${API_URL}/estadisticas`)
@@ -181,7 +193,7 @@ function cargarCitas() {
         <tbody>
           ${data.map(c => `
             <tr>
-              <td>${c.paciente || 'N/A'}${c.paciente ? '' : 'N/A'}
+              <td>${c.paciente || 'N/A'}
               <td>${c.fecha || 'N/A'}
               <td>${c.hora || 'N/A'}
               <td>${c.doctor || 'N/A'}

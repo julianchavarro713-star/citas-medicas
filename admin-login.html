@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Administrativo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .login-container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 350px; text-align: center; }
+        .login-container h2 { margin-bottom: 20px; color: #333; }
+        .campo { margin-bottom: 20px; text-align: left; }
+        .campo label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .campo input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:hover { transform: translateY(-2px); }
+        .error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2>🔐 Acceso Administrativo</h2>
+    <div class="campo">
+        <label>👤 Usuario</label>
+        <input type="text" id="adminUser" placeholder="Usuario">
+    </div>
+    <div class="campo">
+        <label>🔒 Contraseña</label>
+        <input type="password" id="adminPass" placeholder="Contraseña">
+    </div>
+    <button onclick="verificarAcceso()">Ingresar</button>
+    <div id="errorMsg" class="error"></div>
+</div>
+<script>
+function verificarAcceso() {
+    const usuario = document.getElementById("adminUser").value;
+    const password = document.getElementById("adminPass").value;
+    
+    // CREDENCIALES DEL ADMIN (puedes cambiarlas)
+    const ADMIN_USER = "admin";
+    const ADMIN_PASS = "admin123";
+    
+    if (usuario === ADMIN_USER && password === ADMIN_PASS) {
+        localStorage.setItem("adminAuth", "true");
+        window.location.href = "admin.html";
+    } else {
+        document.getElementById("errorMsg").innerHTML = "❌ Usuario o contraseña incorrectos";
+    }
+}
+</script>
+</body>
+</html>
