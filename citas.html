@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Mis Citas Médicas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
@@ -117,38 +118,44 @@ function generarPDF(idCita) {
             "Colina": "Carrera 7 #180-50, Usaquen"
         };
         
-        const contenido = `
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"><title>Comprobante Cita</title></head>
-            <body style="font-family:Arial; padding:40px; margin:0;">
-                <div style="max-width:550px; margin:auto; border:2px solid #667eea; border-radius:15px; padding:20px;">
-                    <div style="background:#667eea; color:white; text-align:center; padding:15px; margin:-20px -20px 20px -20px; border-radius:13px 13px 0 0;">
-                        <h2>🏥 MediCitas Pro</h2>
-                        <p>COMPROBANTE DE CITA MEDICA</p>
-                        <p>${new Date().toLocaleString()}</p>
-                    </div>
-                    <p><strong>Paciente:</strong> ${c.paciente}</p>
-                    <p><strong>Fecha:</strong> ${c.fecha}</p>
-                    <p><strong>Hora:</strong> ${c.hora}</p>
-                    <p><strong>Doctor:</strong> ${c.doctor}</p>
-                    <p><strong>Sede:</strong> ${c.centroMedico}</p>
-                    <p><strong>Dirección:</strong> ${direcciones[c.centroMedico] || "No disponible"}</p>
-                    <p><strong>Motivo:</strong> ${c.motivo || "Consulta general"}</p>
-                    <p><strong>Estado:</strong> CONFIRMADA</p>
-                    <div style="text-align:center; font-size:11px; margin-top:20px; border-top:1px solid #ddd; padding-top:15px;">Gracias por confiar en MediCitas Pro</div>
+        // Crear un div oculto con el contenido del PDF
+        const element = document.createElement('div');
+        element.style.position = 'absolute';
+        element.style.left = '-9999px';
+        element.style.top = '-9999px';
+        element.style.background = 'white';
+        element.style.padding = '20px';
+        element.style.width = '600px';
+        element.innerHTML = `
+            <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; border: 2px solid #667eea; border-radius: 15px; padding: 20px;">
+                <div style="background: #667eea; color: white; text-align: center; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 13px 13px 0 0;">
+                    <h2 style="margin:0;">🏥 MediCitas Pro</h2>
+                    <p>COMPROBANTE DE CITA MEDICA</p>
+                    <p>${new Date().toLocaleString()}</p>
                 </div>
-            </body>
-            </html>
+                <p><strong>Paciente:</strong> ${c.paciente}</p>
+                <p><strong>Fecha:</strong> ${c.fecha}</p>
+                <p><strong>Hora:</strong> ${c.hora}</p>
+                <p><strong>Doctor:</strong> ${c.doctor}</p>
+                <p><strong>Sede:</strong> ${c.centroMedico}</p>
+                <p><strong>Dirección:</strong> ${direcciones[c.centroMedico] || "No disponible"}</p>
+                <p><strong>Motivo:</strong> ${c.motivo || "Consulta general"}</p>
+                <p><strong>Estado:</strong> CONFIRMADA</p>
+                <div style="text-align:center; font-size:11px; margin-top:20px; border-top:1px solid #ddd; padding-top:15px;">Gracias por confiar en MediCitas Pro</div>
+            </div>
         `;
         
-        // Método infalible: crear un blob y descargar
-        const blob = new Blob([contenido], { type: 'application/pdf' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `Cita_${c.paciente}_${c.fecha}.pdf`;
-        link.click();
-        URL.revokeObjectURL(link.href);
+        document.body.appendChild(element);
+        
+        // Convertir a PDF real
+        html2pdf().from(element).set({
+            margin: 0.5,
+            filename: `Cita_${c.paciente}_${c.fecha}.pdf`,
+            html2canvas: { scale: 2, logging: false },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        }).save().then(() => {
+            document.body.removeChild(element);
+        });
     });
 }
 
