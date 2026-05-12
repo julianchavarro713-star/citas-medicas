@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Mis Citas Médicas</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
@@ -19,7 +17,6 @@
         .btn-ver { background: #2196F3; }
         .cita-card { background: #f8f9fa; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .cita-acciones button { width: auto; margin-top: 0; margin-left: 5px; padding: 5px 10px; font-size: 12px; }
-        .btn-pdf { background: #28a745; }
         .btn-eliminar { background: #ff4444; }
         .info-usuario { background: #e8f4f8; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -97,8 +94,7 @@ function cargarCitas() {
                 <div class="cita-card">
                     <div><strong>${c.fecha} - ${c.hora}</strong><br>👨‍⚕️ ${c.doctor}<br>🏥 ${c.centroMedico}<br>📋 ${c.motivo}</div>
                     <div class="cita-acciones">
-                        <button class="btn-pdf" onclick="generarPDF('${c._id}')">📄 PDF</button>
-                        <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌</button>
+                        <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
                     </div>
                 </div>
             `;
@@ -106,62 +102,7 @@ function cargarCitas() {
     });
 }
 
-function eliminarCita(id) { if(confirm("Cancelar?")) fetch(API_URL + "/citas/" + id, {method:"DELETE"}).then(() => cargarCitas()); }
-
-function generarPDF(idCita) {
-    fetch(API_URL + "/citas").then(res => res.json()).then(data => {
-        const c = data.find(x => x._id === idCita);
-        if (!c) { alert("No encontrada"); return; }
-        
-        const direcciones = {
-            "Urgencias Toberin": "Calle 45 #20-30, Toberin",
-            "La Cardio": "Avenida 19 #120-45, Chapinero",
-            "Colina": "Carrera 7 #180-50, Usaquen"
-        };
-        
-        // Crear un div visible pero escondido visualmente
-        const element = document.createElement('div');
-        element.style.position = 'fixed';
-        element.style.left = '0';
-        element.style.top = '0';
-        element.style.width = '600px';
-        element.style.backgroundColor = 'white';
-        element.style.padding = '20px';
-        element.style.zIndex = '-1';
-        element.style.opacity = '0';
-        element.innerHTML = `
-            <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; border: 2px solid #667eea; border-radius: 15px; padding: 20px;">
-                <div style="background: #667eea; color: white; text-align: center; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 13px 13px 0 0;">
-                    <h2 style="margin:0;">🏥 MediCitas Pro</h2>
-                    <p>COMPROBANTE DE CITA MEDICA</p>
-                    <p>${new Date().toLocaleString()}</p>
-                </div>
-                <p><strong>Paciente:</strong> ${c.paciente}</p>
-                <p><strong>Fecha:</strong> ${c.fecha}</p>
-                <p><strong>Hora:</strong> ${c.hora}</p>
-                <p><strong>Doctor:</strong> ${c.doctor}</p>
-                <p><strong>Sede:</strong> ${c.centroMedico}</p>
-                <p><strong>Dirección:</strong> ${direcciones[c.centroMedico] || "No disponible"}</p>
-                <p><strong>Motivo:</strong> ${c.motivo || "Consulta general"}</p>
-                <p><strong>Estado:</strong> CONFIRMADA</p>
-                <div style="text-align:center; font-size:11px; margin-top:20px; border-top:1px solid #ddd; padding-top:15px;">Gracias por confiar en MediCitas Pro</div>
-            </div>
-        `;
-        
-        document.body.appendChild(element);
-        
-        html2canvas(element, { scale: 2 }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const imgWidth = 190;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-            doc.save(`Cita_${c.paciente}_${c.fecha}.pdf`);
-            document.body.removeChild(element);
-        });
-    });
-}
+function eliminarCita(id) { if(confirm("Cancelar esta cita?")) fetch(API_URL + "/citas/" + id, {method:"DELETE"}).then(() => cargarCitas()); }
 
 function limpiar() { document.getElementById("fecha").value=""; document.getElementById("hora").value=""; document.getElementById("doctor").value=""; document.getElementById("centroMedico").value=""; document.getElementById("motivo").value=""; }
 cargarCitas();
