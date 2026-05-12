@@ -119,15 +119,15 @@ function generarPDF(idCita) {
         
         const html = `
             <html>
-            <head><meta charset="UTF-8"><title>Comprobante</title></head>
-            <body style="font-family:Arial; padding:40px; text-align:center;">
-                <div style="border:2px solid #667eea; border-radius:15px; padding:20px; max-width:500px; margin:auto;">
-                    <div style="background:#667eea; color:white; padding:15px; margin:-20px -20px 20px -20px; border-radius:13px 13px 0 0;">
-                        <h2>🏥 MediCitas Pro</h2>
-                        <p>COMPROBANTE DE CITA</p>
-                        <p>${new Date().toLocaleString()}</p>
+            <head><meta charset="UTF-8"><title>Comprobante Cita</title></head>
+            <body style="font-family:Arial; padding:20px; margin:0;" onload="window.print()">
+                <div style="max-width:550px; margin:20px auto; border:2px solid #667eea; border-radius:15px; padding:20px; background:white;">
+                    <div style="background:#667eea; color:white; text-align:center; padding:15px; margin:-20px -20px 20px -20px; border-radius:13px 13px 0 0;">
+                        <h2 style="margin:0;">🏥 MediCitas Pro</h2>
+                        <p style="margin:5px 0 0;">COMPROBANTE DE CITA</p>
+                        <p style="margin:2px 0 0; font-size:11px;">${new Date().toLocaleString()}</p>
                     </div>
-                    <div style="margin:20px 0; text-align:left;">
+                    <div style="margin:15px 0;">
                         <p><strong>Paciente:</strong> ${c.paciente}</p>
                         <p><strong>Fecha:</strong> ${c.fecha}</p>
                         <p><strong>Hora:</strong> ${c.hora}</p>
@@ -135,17 +135,19 @@ function generarPDF(idCita) {
                         <p><strong>Sede:</strong> ${c.centroMedico}</p>
                         <p><strong>Dirección:</strong> ${direcciones[c.centroMedico] || "No disponible"}</p>
                         <p><strong>Motivo:</strong> ${c.motivo || "Consulta general"}</p>
-                        <p><strong>Estado:</strong> CONFIRMADA</p>
+                        <p><strong>Estado:</strong> <span style="color:#28a745;">CONFIRMADA</span></p>
                     </div>
-                    <div style="font-size:11px; color:gray; border-top:1px solid #ddd; padding-top:15px;">Gracias por confiar en MediCitas Pro</div>
+                    <div style="text-align:center; font-size:11px; color:gray; border-top:1px solid #ddd; padding-top:12px; margin-top:10px;">
+                        Gracias por confiar en MediCitas Pro
+                    </div>
                 </div>
             </body>
             </html>
         `;
-        const win = window.open();
-        win.document.write(html);
-        win.document.close();
-        setTimeout(() => win.print(), 500);
+        
+        const ventana = window.open('', '_blank');
+        ventana.document.write(html);
+        ventana.document.close();
     });
 }
 
