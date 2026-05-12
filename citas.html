@@ -57,11 +57,17 @@
 <script>
 const API_URL = "https://citas-medicas-slg0.onrender.com";
 const usuario = localStorage.getItem("usuario");
-if (!usuario) { alert("Inicie sesion"); window.location.href = "login.html"; }
+if (!usuario) { 
+    alert("Inicie sesion primero");
+    window.location.href = "login.html";
+}
 const user = JSON.parse(usuario);
 document.getElementById("infoUsuario").innerHTML = "👋 Hola, " + user.nombre;
 
-function cerrarSesion() { localStorage.removeItem("usuario"); window.location.href = "login.html"; }
+function cerrarSesion() { 
+    localStorage.removeItem("usuario"); 
+    window.location.href = "login.html"; 
+}
 
 function agendarCita() {
     const cita = {
@@ -72,39 +78,84 @@ function agendarCita() {
         centroMedico: document.getElementById("centroMedico").value,
         motivo: document.getElementById("motivo").value || "Consulta general"
     };
-    if (!cita.fecha || !cita.hora || !cita.doctor || !cita.centroMedico) { alert("Complete campos"); return; }
+    if (!cita.fecha || !cita.hora || !cita.doctor || !cita.centroMedico) { 
+        alert("Complete todos los campos"); 
+        return; 
+    }
     
     fetch(API_URL + "/citas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cita)
-    }).then(() => { alert("Cita agendada"); cargarCitas(); limpiar(); }).catch(() => alert("Error"));
+    })
+    .then(response => response.json())
+    .then(data => { 
+        alert(data.mensaje || "Cita agendada"); 
+        cargarCitas(); 
+        limpiar(); 
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Error al agendar cita");
+    });
 }
 
 function cargarCitas() {
     fetch(API_URL + "/citas")
-    .then(res => res.json())
+    .then(response => response.json())
     .then(data => {
         const misCitas = data.filter(c => c.paciente === user.nombre);
-        const cont = document.getElementById("listaCitas");
-        if (misCitas.length === 0) { cont.innerHTML = "<p>No hay citas</p>"; return; }
-        cont.innerHTML = "";
-        misCitas.forEach(c => {
-            cont.innerHTML += `
+        const contenedor = document.getElementById("listaCitas");
+        if (misCitas.length === 0) { 
+            contenedor.innerHTML = "<p>No hay citas agendadas</p>"; 
+            return; 
+        }
+        contenedor.innerHTML = "";
+        for (let i = 0; i < misCitas.length; i++) {
+            const c = misCitas[i];
+            contenedor.innerHTML += `
                 <div class="cita-card">
-                    <div><strong>${c.fecha} - ${c.hora}</strong><br>👨‍⚕️ ${c.doctor}<br>🏥 ${c.centroMedico}<br>📋 ${c.motivo}</div>
+                    <div>
+                        <strong>${c.fecha} - ${c.hora}</strong><br>
+                        👨‍⚕️ Doctor: ${c.doctor}<br>
+                        🏥 Sede: ${c.centroMedico}<br>
+                        📋 Motivo: ${c.motivo}
+                    </div>
                     <div class="cita-acciones">
                         <button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>
                     </div>
                 </div>
             `;
-        });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        document.getElementById("listaCitas").innerHTML = "<p>Error al cargar citas</p>";
     });
 }
 
-function eliminarCita(id) { if(confirm("Cancelar esta cita?")) fetch(API_URL + "/citas/" + id, {method:"DELETE"}).then(() => cargarCitas()); }
+function eliminarCita(id) { 
+    if(confirm("¿Cancelar esta cita?")) {
+        fetch(API_URL + "/citas/" + id, { method: "DELETE" })
+        .then(() => { 
+            alert("Cita cancelada");
+            cargarCitas(); 
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error al cancelar cita");
+        });
+    }
+}
 
-function limpiar() { document.getElementById("fecha").value=""; document.getElementById("hora").value=""; document.getElementById("doctor").value=""; document.getElementById("centroMedico").value=""; document.getElementById("motivo").value=""; }
+function limpiar() { 
+    document.getElementById("fecha").value = ""; 
+    document.getElementById("hora").value = ""; 
+    document.getElementById("doctor").value = ""; 
+    document.getElementById("centroMedico").value = ""; 
+    document.getElementById("motivo").value = ""; 
+}
+
 cargarCitas();
 </script>
 </body>
