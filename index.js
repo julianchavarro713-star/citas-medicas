@@ -8,8 +8,9 @@ const Usuario = require("./models/Usuario");
 
 const app = express();
 
+// Configurar CORS para permitir Vercel (frontend)
 app.use(cors({
-  origin: "https://grand-fenglisu-4c6a7c.netlify.app"
+  origin: "https://citas-medicas-chi-lime.vercel.app"
 }));
 app.use(express.json());
 
@@ -65,14 +66,12 @@ app.get("/usuarios", async (req, res) => {
   res.json(usuarios);
 });
 
-// ==================== CREAR CITA CON VALIDACIÓN ====================
 app.post("/citas", async (req, res) => {
   try {
     console.log("📌 Datos recibidos en backend:", req.body);
     
     const { fecha, hora, doctor } = req.body;
 
-    // Verificar si ya existe una cita con la misma fecha, hora y doctor
     const citaExistente = await Cita.findOne({
       fecha: fecha,
       hora: hora,
@@ -85,7 +84,6 @@ app.post("/citas", async (req, res) => {
       });
     }
 
-    // Si no existe, crear la nueva cita
     const nueva = new Cita({
       paciente: req.body.paciente,
       fecha: req.body.fecha,
