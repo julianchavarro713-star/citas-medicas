@@ -117,37 +117,38 @@ function generarPDF(idCita) {
             "Colina": "Carrera 7 #180-50, Usaquen"
         };
         
-        const html = `
+        const contenido = `
+            <!DOCTYPE html>
             <html>
             <head><meta charset="UTF-8"><title>Comprobante Cita</title></head>
-            <body style="font-family:Arial; padding:20px; margin:0;" onload="window.print()">
-                <div style="max-width:550px; margin:20px auto; border:2px solid #667eea; border-radius:15px; padding:20px; background:white;">
+            <body style="font-family:Arial; padding:40px; margin:0;">
+                <div style="max-width:550px; margin:auto; border:2px solid #667eea; border-radius:15px; padding:20px;">
                     <div style="background:#667eea; color:white; text-align:center; padding:15px; margin:-20px -20px 20px -20px; border-radius:13px 13px 0 0;">
-                        <h2 style="margin:0;">🏥 MediCitas Pro</h2>
-                        <p style="margin:5px 0 0;">COMPROBANTE DE CITA</p>
-                        <p style="margin:2px 0 0; font-size:11px;">${new Date().toLocaleString()}</p>
+                        <h2>🏥 MediCitas Pro</h2>
+                        <p>COMPROBANTE DE CITA MEDICA</p>
+                        <p>${new Date().toLocaleString()}</p>
                     </div>
-                    <div style="margin:15px 0;">
-                        <p><strong>Paciente:</strong> ${c.paciente}</p>
-                        <p><strong>Fecha:</strong> ${c.fecha}</p>
-                        <p><strong>Hora:</strong> ${c.hora}</p>
-                        <p><strong>Doctor:</strong> ${c.doctor}</p>
-                        <p><strong>Sede:</strong> ${c.centroMedico}</p>
-                        <p><strong>Dirección:</strong> ${direcciones[c.centroMedico] || "No disponible"}</p>
-                        <p><strong>Motivo:</strong> ${c.motivo || "Consulta general"}</p>
-                        <p><strong>Estado:</strong> <span style="color:#28a745;">CONFIRMADA</span></p>
-                    </div>
-                    <div style="text-align:center; font-size:11px; color:gray; border-top:1px solid #ddd; padding-top:12px; margin-top:10px;">
-                        Gracias por confiar en MediCitas Pro
-                    </div>
+                    <p><strong>Paciente:</strong> ${c.paciente}</p>
+                    <p><strong>Fecha:</strong> ${c.fecha}</p>
+                    <p><strong>Hora:</strong> ${c.hora}</p>
+                    <p><strong>Doctor:</strong> ${c.doctor}</p>
+                    <p><strong>Sede:</strong> ${c.centroMedico}</p>
+                    <p><strong>Dirección:</strong> ${direcciones[c.centroMedico] || "No disponible"}</p>
+                    <p><strong>Motivo:</strong> ${c.motivo || "Consulta general"}</p>
+                    <p><strong>Estado:</strong> CONFIRMADA</p>
+                    <div style="text-align:center; font-size:11px; margin-top:20px; border-top:1px solid #ddd; padding-top:15px;">Gracias por confiar en MediCitas Pro</div>
                 </div>
             </body>
             </html>
         `;
         
-        const ventana = window.open('', '_blank');
-        ventana.document.write(html);
-        ventana.document.close();
+        // Método infalible: crear un blob y descargar
+        const blob = new Blob([contenido], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Cita_${c.paciente}_${c.fecha}.pdf`;
+        link.click();
+        URL.revokeObjectURL(link.href);
     });
 }
 
