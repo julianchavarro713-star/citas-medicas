@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Mis Citas Médicas</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
@@ -118,14 +119,16 @@ function generarPDF(idCita) {
             "Colina": "Carrera 7 #180-50, Usaquen"
         };
         
-        // Crear un div oculto con el contenido del PDF
+        // Crear un div visible pero escondido visualmente
         const element = document.createElement('div');
-        element.style.position = 'absolute';
-        element.style.left = '-9999px';
-        element.style.top = '-9999px';
-        element.style.background = 'white';
-        element.style.padding = '20px';
+        element.style.position = 'fixed';
+        element.style.left = '0';
+        element.style.top = '0';
         element.style.width = '600px';
+        element.style.backgroundColor = 'white';
+        element.style.padding = '20px';
+        element.style.zIndex = '-1';
+        element.style.opacity = '0';
         element.innerHTML = `
             <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; border: 2px solid #667eea; border-radius: 15px; padding: 20px;">
                 <div style="background: #667eea; color: white; text-align: center; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 13px 13px 0 0;">
@@ -147,13 +150,14 @@ function generarPDF(idCita) {
         
         document.body.appendChild(element);
         
-        // Convertir a PDF real
-        html2pdf().from(element).set({
-            margin: 0.5,
-            filename: `Cita_${c.paciente}_${c.fecha}.pdf`,
-            html2canvas: { scale: 2, logging: false },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        }).save().then(() => {
+        html2canvas(element, { scale: 2 }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 190;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            doc.save(`Cita_${c.paciente}_${c.fecha}.pdf`);
             document.body.removeChild(element);
         });
     });
