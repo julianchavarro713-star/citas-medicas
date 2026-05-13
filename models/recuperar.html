@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recuperar Contraseña</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .container { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        h2 { text-align: center; margin-bottom: 20px; color: #333; }
+        .campo { margin-bottom: 20px; }
+        .campo label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .campo input, .campo select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { transform: translateY(-2px); }
+        .link { text-align: center; margin-top: 20px; }
+        .link a { color: #667eea; text-decoration: none; }
+        .mensaje { margin-top: 20px; padding: 10px; border-radius: 8px; text-align: center; }
+        .error { background: #ffe6e6; color: #ff3333; }
+        .exito { background: #e6ffe6; color: #28a745; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🔐 Recuperar Contraseña</h2>
+    <div id="paso1">
+        <div class="campo">
+            <label>📧 Correo electrónico</label>
+            <input type="email" id="correo" placeholder="ejemplo@correo.com">
+        </div>
+        <button onclick="validarCorreo()">Continuar</button>
+    </div>
+    <div id="paso2" style="display:none;">
+        <div class="campo">
+            <label>🔐 Pregunta de seguridad</label>
+            <input type="text" id="preguntaMostrada" readonly style="background:#f5f5f5;">
+        </div>
+        <div class="campo">
+            <label>✏️ Tu respuesta</label>
+            <input type="text" id="respuestaSeguridad" placeholder="Escribe tu respuesta">
+        </div>
+        <button onclick="validarRespuesta()">Verificar respuesta</button>
+    </div>
+    <div id="paso3" style="display:none;">
+        <div class="campo">
+            <label>🔑 Nueva contraseña</label>
+            <input type="password" id="nuevaPassword" placeholder="Nueva contraseña">
+        </div>
+        <div class="campo">
+            <label>🔑 Confirmar nueva contraseña</label>
+            <input type="password" id="confirmarPassword" placeholder="Confirmar nueva contraseña">
+        </div>
+        <button onclick="cambiarPassword()">Restablecer contraseña</button>
+    </div>
+    <div class="link"><a href="login.html">← Volver al inicio de sesión</a></div>
+    <div id="mensaje"></div>
+</div>
+<script>
+const API_URL = "https://citas-medicas-slg0.onrender.com";
+let usuarioIdGlobal = null;
+
+function validarCorreo() {
+    const correo = document.getElementById("correo").value;
+    if (!correo) {
+        mostrarMensaje("Ingrese su correo electrónico", "error");
+        return;
+    }
+    
+    fetch(API_URL + "/usuarios")
+        .then(res => res.json())
+        .then(data => {
+            const usuario = data.find(u => u.correo === correo);
+            if (!usuario) {
+                mostrarMensaje("❌ Correo no encontrado", "error");
+                return;
+            }
+            usuarioIdGlobal = usuario._id;
+            document.getElementById("preguntaMostrada").value = usuario.preguntaSeguridad;
+            document.getElementById("paso1").style.display = "none";
+            document.getElementById("paso2").style.display = "block";
+            mostrarMensaje("");
+        });
+}
+
+function validarRespuesta() {
+    const respuesta = document.getElementById("respuestaSeguridad").value.toLowerCase();
+    if (!respuesta) {
+        mostrarMensaje("Ingrese su respuesta de seguridad", "error");
+        return;
+    }
+    
+    fetch(API_URL + "/usuarios")
+        .then(res => res.json())
+        .then(data => {
+            const usuario = data.find(u => u._id === usuarioIdGlobal);
+            if (usuario.respuestaSeguridad === respuesta) {
+                document.getElementById("paso2").style.display = "none";
+                document.getElementById("paso3").style.display = "block";
+                mostrarMensaje("✅ Respuesta correcta. Ingrese su nueva contraseña.", "exito");
+            } else {
+                mostrarMensaje("❌ Respuesta incorrecta", "error");
+            }
+        });
+}
+
+function cambiarPassword() {
+    const nueva = document.getElementById("nuevaPassword").value;
+    const confirmar = document.getElementById("confirmarPassword").value;
+    
+    if (!nueva || !confirmar) {
+        mostrarMensaje("Complete ambos campos", "error");
+        return;
+    }
+    if (nueva !== confirmar) {
+        mostrarMensaje("Las contraseñas no coinciden", "error");
+        return;
+    }
+    if (nueva.length < 4) {
+        mostrarMensaje("La contraseña debe tener al menos 4 caracteres", "error");
+        return;
+    }
+    
+    fetch(API_URL + "/usuarios")
+        .then(res => res.json())
+        .then(data => {
+            const usuario = data.find(u => u._id === usuarioIdGlobal);
+            const passwordActualizada = usuario;
+            
+            fetch(API_URL + "/usuarios/" + usuarioIdGlobal, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...usuario, password: nueva })
+            })
+            .then(() => {
+                mostrarMensaje("✅ Contraseña actualizada correctamente. Redirigiendo...", "exito");
+                setTimeout(() => { window.location.href = "login.html"; }, 2000);
+            });
+        });
+}
+
+function mostrarMensaje(texto, tipo) {
+    const div = document.getElementById("mensaje");
+    div.innerHTML = `<div class="${tipo}">${texto}</div>`;
+}
+</script>
+</body>
+</html>

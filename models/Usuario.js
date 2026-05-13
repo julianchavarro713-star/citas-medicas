@@ -9,7 +9,9 @@ const UsuarioSchema = new mongoose.Schema({
   documento: String,
   direccion: String,
   estatura: Number,
-  tipoSangre: String
+  tipoSangre: String,
+  preguntaSeguridad: String,
+  respuestaSeguridad: String
 });
 
 module.exports = mongoose.model("Usuario", UsuarioSchema);

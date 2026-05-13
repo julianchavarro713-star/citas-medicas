@@ -19,6 +19,7 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log("Conectado a MongoDB"))
   .catch(err => console.log("Error conectando a MongoDB:", err));
 
+// ==================== REGISTRO DE USUARIOS ====================
 app.post("/usuarios", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -32,16 +33,36 @@ app.post("/usuarios", async (req, res) => {
       documento: req.body.documento,
       direccion: req.body.direccion,
       estatura: req.body.estatura,
-      tipoSangre: req.body.tipoSangre
+      tipoSangre: req.body.tipoSangre,
+      preguntaSeguridad: req.body.preguntaSeguridad,
+      respuestaSeguridad: req.body.respuestaSeguridad
     });
 
     await nuevoUsuario.save();
     res.status(201).json({ mensaje: "Usuario registrado exitosamente" });
   } catch (error) {
+    console.error("Error en registro:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// ==================== ACTUALIZAR USUARIO (para recuperar contraseña) ====================
+app.put("/usuarios/:id", async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const usuarioActualizado = await Usuario.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, password: hashedPassword },
+      { new: true }
+    );
+    res.json({ mensaje: "Contraseña actualizada exitosamente" });
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== LOGIN ====================
 app.post("/login", async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ correo: req.body.correo });
@@ -57,15 +78,23 @@ app.post("/login", async (req, res) => {
       res.status(401).json({ success: false, mensaje: "Credenciales incorrectas" });
     }
   } catch (error) {
+    console.error("Error en login:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// ==================== OBTENER USUARIOS ====================
 app.get("/usuarios", async (req, res) => {
-  const usuarios = await Usuario.find();
-  res.json(usuarios);
+  try {
+    const usuarios = await Usuario.find();
+    res.json(usuarios);
+  } catch (error) {
+    console.error("Error al obtener usuarios:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
+// ==================== CREAR CITA CON VALIDACIÓN ====================
 app.post("/citas", async (req, res) => {
   try {
     console.log("📌 Datos recibidos en backend:", req.body);
@@ -102,16 +131,29 @@ app.post("/citas", async (req, res) => {
   }
 });
 
+// ==================== OBTENER CITAS ====================
 app.get("/citas", async (req, res) => {
-  const citas = await Cita.find();
-  res.json(citas);
+  try {
+    const citas = await Cita.find();
+    res.json(citas);
+  } catch (error) {
+    console.error("Error al obtener citas:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
+// ==================== ELIMINAR CITA ====================
 app.delete("/citas/:id", async (req, res) => {
-  await Cita.findByIdAndDelete(req.params.id);
-  res.json({ mensaje: "Eliminada" });
+  try {
+    await Cita.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: "Eliminada" });
+  } catch (error) {
+    console.error("Error al eliminar cita:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
+// ==================== ESTADÍSTICAS ====================
 app.get("/estadisticas", async (req, res) => {
   try {
     const totalCitas = await Cita.countDocuments();
@@ -122,10 +164,12 @@ app.get("/estadisticas", async (req, res) => {
     
     res.json({ totalCitas, totalUsuarios, citasPorDoctor });
   } catch (error) {
+    console.error("Error en estadísticas:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// ==================== INICIAR SERVIDOR ====================
 app.listen(3000, () => {
   console.log("Servidor en puerto 3000");
 });
