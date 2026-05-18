@@ -128,7 +128,7 @@ button:hover {
 </div>
 
 <script>
-const API_URL = "https://citas-medicas-slg0.onrender.com";
+const API_URL = "https://citas-medicas-backend-gitlab.onrender.com";
 
 // Verificar autenticación del administrador
 const adminAuth = localStorage.getItem("adminAuth");
@@ -188,7 +188,7 @@ function cargarCitas() {
       <h3>Lista de Citas</h3>
       <table>
         <thead>
-          <tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Centro</th><th>Acciones</th></tr>
+          <tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Centro</th><th>Estado</th><th>Multa</th><th>Acciones</th></tr>
         </thead>
         <tbody>
           ${data.map(c => `
@@ -198,7 +198,12 @@ function cargarCitas() {
               <td>${c.hora || 'N/A'}
               <td>${c.doctor || 'N/A'}
               <td>${c.centroMedico || 'N/A'}
-              <td><button onclick="eliminarCita('${c._id}')">🗑️ Eliminar</button>
+              <td>${c.estado || 'pendiente'}
+              <td>${c.multa ? `$${c.multa.toLocaleString()}` : '-'}
+              <td>
+                <button onclick="marcarNoAsistio('${c._id}')" ${c.estado === 'no_asistio' || c.estado === 'cancelada' ? 'disabled' : ''} style="background:#ff9800;">❌ No asistió</button>
+                <button onclick="eliminarCita('${c._id}')">🗑️ Eliminar</button>
+              </td>
             </tr>
           `).join('')}
         </tbody>
@@ -256,6 +261,22 @@ function eliminarCita(id) {
     .catch(error => {
       console.error("Error:", error);
       alert("Error al eliminar la cita");
+    });
+  }
+}
+
+function marcarNoAsistio(id) {
+  if (confirm("¿Marcar esta cita como 'No asistió'? Se generará una multa de $50,000 para el paciente.")) {
+    fetch(`${API_URL}/citas/${id}/no-asistio`, { method: "PUT" })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.mensaje);
+      cargarCitas();
+      cargarEstadisticas();
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Error al marcar como no asistido");
     });
   }
 }

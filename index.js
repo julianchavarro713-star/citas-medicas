@@ -142,13 +142,82 @@ app.get("/citas", async (req, res) => {
   }
 });
 
-// ==================== ELIMINAR CITA ====================
+// ==================== CANCELAR CITA CON VALIDACIÓN DE TIEMPO ====================
 app.delete("/citas/:id", async (req, res) => {
   try {
-    await Cita.findByIdAndDelete(req.params.id);
-    res.json({ mensaje: "Eliminada" });
+    const cita = await Cita.findById(req.params.id);
+    
+    if (!cita) {
+      return res.status(404).json({ error: "Cita no encontrada" });
+    }
+    
+    if (cita.estado === "cancelada") {
+      return res.status(400).json({ error: "Esta cita ya fue cancelada" });
+    }
+    
+    if (cita.estado === "no_asistio") {
+      return res.status(400).json({ error: "No se puede cancelar una cita donde el paciente no asistió" });
+    }
+    
+    const fechaHoraCita = new Date(`${cita.fecha}T${cita.hora}`);
+    const ahora = new Date();
+    const diffHoras = (fechaHoraCita - ahora) / (1000 * 60 * 60);
+    
+    if (diffHoras < 1 && diffHoras > 0) {
+      return res.status(400).json({ 
+        error: "❌ No puedes cancelar la cita porque falta menos de 1 hora. Si no asistes, se generará una multa." 
+      });
+    }
+    
+    if (diffHoras < 0) {
+      return res.status(400).json({ 
+        error: "❌ No puedes cancelar una cita que ya pasó." 
+      });
+    }
+    
+    cita.estado = "cancelada";
+    await cita.save();
+    
+    res.json({ mensaje: "Cita cancelada exitosamente" });
   } catch (error) {
-    console.error("Error al eliminar cita:", error);
+    console.error("Error al cancelar cita:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== MARCAR CITA COMO NO ASISTIÓ (solo admin) ====================
+app.put("/citas/:id/no-asistio", async (req, res) => {
+  try {
+    const cita = await Cita.findById(req.params.id);
+    
+    if (!cita) {
+      return res.status(404).json({ error: "Cita no encontrada" });
+    }
+    
+    const fechaHoraCita = new Date(`${cita.fecha}T${cita.hora}`);
+    const ahora = new Date();
+    
+    if (fechaHoraCita > ahora) {
+      return res.status(400).json({ 
+        error: "⚠️ No se puede registrar la inasistencia. La cita aún no ha ocurrido (está programada para una fecha futura). Solo se pueden marcar como 'No asistió' las citas con fecha y hora ya pasadas." 
+      });
+    }
+    
+    if (cita.estado === "cancelada") {
+      return res.status(400).json({ error: "Esta cita ya fue cancelada" });
+    }
+    
+    if (cita.estado === "no_asistio") {
+      return res.status(400).json({ error: "Esta cita ya fue marcada como no asistido" });
+    }
+    
+    cita.estado = "no_asistio";
+    cita.multa = 50000;
+    await cita.save();
+    
+    res.json({ mensaje: "✅ Cita marcada como no asistido. Multa generada: $50,000" });
+  } catch (error) {
+    console.error("Error:", error);
     res.status(500).json({ error: error.message });
   }
 });

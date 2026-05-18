@@ -6,7 +6,9 @@ const CitaSchema = new mongoose.Schema({
   hora: String,
   doctor: String,
   centroMedico: String,
-  motivo: String  
+  motivo: String,
+  estado: { type: String, default: "pendiente" },
+  multa: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model("Cita", CitaSchema);

@@ -79,7 +79,7 @@
     </div>
 </div>
 <script>
-const API_URL = "https://citas-medicas-slg0.onrender.com";
+const API_URL = "https://citas-medicas-backend-gitlab.onrender.com";
 
 const doctoresPorSede = {
     "Urgencias Toberin": [
@@ -147,20 +147,46 @@ function crearCita() {
     const hora = document.getElementById("hora").value;
     const paciente = document.getElementById("paciente").value;
     const motivo = document.getElementById("motivo").value;
-    if (!centroMedico || !doctor || !fecha || !hora) { alert("⚠️ Por favor complete todos los campos"); return; }
-    const datos = { paciente, fecha, hora, doctor, centroMedico, motivo: motivo || "No especificado" };
+    
+    if (!centroMedico || !doctor || !fecha || !hora) { 
+        alert("⚠️ Por favor complete todos los campos"); 
+        return; 
+    }
+    
+    const datos = { 
+        paciente, 
+        fecha, 
+        hora, 
+        doctor, 
+        centroMedico, 
+        motivo: motivo || "No especificado",
+        estado: "pendiente",
+        multa: 0
+    };
+    
     fetch(API_URL + "/citas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datos)
     })
     .then(async res => {
-        if (res.status === 409) { const error = await res.json(); alert(error.error); throw new Error("Horario no disponible"); }
+        if (res.status === 409) { 
+            const error = await res.json(); 
+            alert(error.error); 
+            throw new Error("Horario no disponible"); 
+        }
         if (!res.ok) throw new Error("Error");
         return res.json();
     })
-    .then(data => { alert(data.mensaje); verCitas(); limpiarSeleccion(); })
-    .catch(error => { if (error.message !== "Horario no disponible") alert("❌ Error al agendar la cita"); });
+    .then(data => { 
+        alert(data.mensaje); 
+        verCitas(); 
+        limpiarSeleccion(); 
+    })
+    .catch(error => { 
+        if (error.message !== "Horario no disponible") 
+            alert("❌ Error al agendar la cita"); 
+    });
 }
 
 function verCitas() {
@@ -173,8 +199,45 @@ function verCitas() {
         if (misCitas.length === 0) { citasDiv.innerHTML = '<div class="mensaje-vacio">📭 No tienes citas agendadas</div>'; return; }
         citasDiv.innerHTML = "";
         misCitas.forEach(c => {
-            const div = document.createElement("div"); div.className = "cita-card";
-            div.innerHTML = `<div class="cita-info"><strong>📅 ${c.fecha} - ⏰ ${c.hora}</strong><p>👨‍⚕️ Doctor: ${c.doctor} | 🏥 Sede: ${c.centroMedico}</p></div><button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>`;
+            const div = document.createElement("div");
+            div.className = "cita-card";
+            
+            let estadoColor = "";
+            let estadoTexto = c.estado || "pendiente";
+            switch (estadoTexto) {
+                case "cancelada": estadoColor = "#ff4444"; break;
+                case "no_asistio": estadoColor = "#ff9800"; break;
+                default: estadoColor = "#4facfe";
+            }
+            
+            let multaHtml = "";
+            if (c.multa && c.multa > 0) {
+                multaHtml = `<p style="color:#ff4444;">💰 Multa: $${c.multa.toLocaleString()}</p>`;
+            }
+            
+            const fechaHoraCita = new Date(`${c.fecha}T${c.hora}`);
+            const ahora = new Date();
+            const diffHoras = (fechaHoraCita - ahora) / (1000 * 60 * 60);
+            const puedeCancelar = (estadoTexto === "pendiente") && diffHoras > 1;
+            
+            let botonCancelar = '';
+            if (puedeCancelar) {
+                botonCancelar = `<button class="btn-eliminar" onclick="eliminarCita('${c._id}')">❌ Cancelar</button>`;
+            } else if (estadoTexto === "pendiente" && diffHoras <= 1 && diffHoras > 0) {
+                botonCancelar = `<button class="btn-eliminar" disabled style="background:#ccc;">⏰ No se puede cancelar</button>`;
+            }
+            
+            div.innerHTML = `
+                <div class="cita-info">
+                    <strong>📅 ${c.fecha} - ⏰ ${c.hora}</strong>
+                    <p>👨‍⚕️ Doctor: ${c.doctor} | 🏥 Sede: ${c.centroMedico}</p>
+                    <p style="color: ${estadoColor}; font-weight: bold;">📌 Estado: ${estadoTexto.toUpperCase()}</p>
+                    ${multaHtml}
+                </div>
+                <div class="cita-acciones">
+                    ${botonCancelar}
+                </div>
+            `;
             citasDiv.appendChild(div);
         });
     });
